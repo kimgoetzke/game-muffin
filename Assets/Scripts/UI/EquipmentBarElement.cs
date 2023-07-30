@@ -1,3 +1,5 @@
+using CaptainHindsight.Data.Equipment;
+using CaptainHindsight.Data.Skills;
 using CaptainHindsight.Managers;
 using CaptainHindsight.Player;
 using DG.Tweening;

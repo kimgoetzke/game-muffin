@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using CaptainHindsight.Core;
+using CaptainHindsight.Data.Skills;
 using CaptainHindsight.Managers;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using static CaptainHindsight.Skill;
+using static CaptainHindsight.Data.Skills.Skill;
 
 namespace CaptainHindsight.Player
 {

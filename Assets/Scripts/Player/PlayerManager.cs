@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CaptainHindsight.Core;
+using CaptainHindsight.Data.GameStates;
+using CaptainHindsight.Data.Skills;
 using CaptainHindsight.Directors;
 using CaptainHindsight.Directors.Audio;
 using CaptainHindsight.Managers;

@@ -1,5 +1,6 @@
 using System;
 using CaptainHindsight.Core;
+using CaptainHindsight.Data.GameStates;
 using Sirenix.OdinInspector;
 using UnityEngine;
 

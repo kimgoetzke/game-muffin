@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using CaptainHindsight.Data.Colours;
+using CaptainHindsight.Data.Equipment;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Serialization;

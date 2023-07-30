@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CaptainHindsight.Data.Equipment;
 using CaptainHindsight.Directors;
 using CaptainHindsight.Managers;
 using CaptainHindsight.Player;

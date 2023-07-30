@@ -1,3 +1,4 @@
+using CaptainHindsight.Data.Skills;
 using CaptainHindsight.Directors;
 using CaptainHindsight.Managers;
 using CaptainHindsight.Player;

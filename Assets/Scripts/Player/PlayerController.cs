@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CaptainHindsight.Core;
+using CaptainHindsight.Data.GameStates;
+using CaptainHindsight.Data.Skills;
 using CaptainHindsight.Directors;
 using CaptainHindsight.Managers;
 using CaptainHindsight.Other;
@@ -18,6 +20,8 @@ namespace CaptainHindsight.Player
     private Animator _playerAnimator;
     private readonly Dictionary<int, string> _animationDirectionsList = new();
     private bool _isDead;
+    private static readonly int MoveSpeed = Animator.StringToHash("moveSpeed");
+    private static readonly int DieAnimation = Animator.StringToHash("die");
 
     [Title("Skeletons")] [SerializeField] private Transform[] playerSkeletons;
     private Transform _currentSkeleton;
@@ -29,14 +33,12 @@ namespace CaptainHindsight.Player
     [Required] [SerializeField] private Solver2D[] rightArmSolvers;
     [Required] [SerializeField] private Solver2D[] leftArmSolvers;
 
-    [Title("Movement")] [Required] [SerializeField]
-    private float mSpeed;
-
-    private static readonly int MoveSpeed = Animator.StringToHash("moveSpeed");
-
-    [ReadOnly] [SerializeField] private float mMaxSpeed;
-    [ReadOnly] [SerializeField] private float mEquipmentModifier = 1f;
+    [Title("Movement")] 
+    [SerializeField] private float mSpeed;
+    [SerializeField] private float mMaxSpeed;
+    [ShowInInspector, ReadOnly] private float _mEquipmentModifier = 1f;
     private PlayerInputActions _playerInputActions;
+    private InputAction _movement;
     private int _currentDirection;
     private bool _canMove;
     private bool _isMoving;
@@ -44,7 +46,6 @@ namespace CaptainHindsight.Player
 
     [Title("Equipment")] private int _currentEquipmentSlot = 1;
     private int _availableEquipmentSlots;
-
 
     [Required] [SerializeField] [ReadOnly]
     private Transform aimTransform; // Only used for parenting and to switch on/off
@@ -61,7 +62,6 @@ namespace CaptainHindsight.Player
     private float _offsetX;
     private float _offsetY;
 
-
     [Title("Interaction")] [SerializeField]
     private LayerMask interactionLayer;
 
@@ -69,7 +69,6 @@ namespace CaptainHindsight.Player
     private PlayerSkillsManager _playerSkills;
     private float _healthRegenTimer;
     private readonly float _healthRegenCooldown = 2f;
-    private static readonly int DieAnimation = Animator.StringToHash("die");
 
     #region Awake & Start
 
@@ -94,7 +93,7 @@ namespace CaptainHindsight.Player
     {
       _mouseController = MouseController.Instance;
       _equipmentController = equipmentTransform.GetComponent<EquipmentController>();
-      mEquipmentModifier = _equipmentController.GetWalkSpeedModifier(1);
+      _mEquipmentModifier = _equipmentController.GetWalkSpeedModifier(1);
       _availableEquipmentSlots = _equipmentController.GetEquipmentQuantity();
       _playerSkills = PlayerSkillsManager.Instance;
     }
@@ -103,6 +102,7 @@ namespace CaptainHindsight.Player
 
     private void FixedUpdate()
     {
+      Helper.Log($"[PlayerController] {_movement.ReadValue<Vector2>()}.");
       if (_canMove)
       {
         var lookDirection = _mouseController.mpGroundLevel - _rb.position;
@@ -122,13 +122,23 @@ namespace CaptainHindsight.Player
 
         // Move player using mouse input, if allowed
         if (_isMoving)
+        {
+          var input = _movement.ReadValue<Vector2>();
+          // _rb.velocity = new Vector3(
+          //   Mathf.Clamp(lookDirection.x * mSpeed, -mMaxSpeed * _mEquipmentModifier,
+          //     mMaxSpeed * _mEquipmentModifier),
+          //   _rb.velocity.y,
+          //   Mathf.Clamp(lookDirection.z * mSpeed, -mMaxSpeed * _mEquipmentModifier,
+          //     mMaxSpeed * _mEquipmentModifier)
+          // );
           _rb.velocity = new Vector3(
-            Mathf.Clamp(lookDirection.x * mSpeed, -mMaxSpeed * mEquipmentModifier,
-              mMaxSpeed * mEquipmentModifier),
+            Mathf.Clamp(mSpeed * input.x, -mMaxSpeed * _mEquipmentModifier,
+              mMaxSpeed * _mEquipmentModifier),
             _rb.velocity.y,
-            Mathf.Clamp(lookDirection.z * mSpeed, -mMaxSpeed * mEquipmentModifier,
-              mMaxSpeed * mEquipmentModifier)
+            Mathf.Clamp(mSpeed * input.x, -mMaxSpeed * _mEquipmentModifier,
+              mMaxSpeed * _mEquipmentModifier)
           );
+        }
       }
 
       // Keep attacking while attack button is pressed
@@ -268,7 +278,9 @@ namespace CaptainHindsight.Player
       // Get normalised time for current animation clip to be able to resume
       float time = 0;
       if (_playerAnimator != null)
+      {
         time = _playerAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+      }
 
       // Deactivate current animator and skeleton
       _currentSkeleton.gameObject.SetActive(false);
@@ -310,9 +322,13 @@ namespace CaptainHindsight.Player
       {
         var slot = _currentEquipmentSlot;
         if (context.ReadValue<float>() < 0)
+        {
           Equip(Mathf.Clamp(slot - 1, 1, _availableEquipmentSlots));
+        }
         else if (context.ReadValue<float>() > 0)
+        {
           Equip(Mathf.Clamp(slot + 1, 1, _availableEquipmentSlots));
+        }
       }
     }
 
@@ -327,7 +343,7 @@ namespace CaptainHindsight.Player
         _currentEquipmentSlot = equipmentSlot;
         aimTransform.gameObject.SetActive(false);
         _isEquipped = false;
-        mEquipmentModifier = _equipmentController.GetWalkSpeedModifier(equipmentSlot);
+        _mEquipmentModifier = _equipmentController.GetWalkSpeedModifier(equipmentSlot);
         UpdateSolverWeights(false);
         EventManager.Instance.ChangeCursor(0);
       }
@@ -341,7 +357,7 @@ namespace CaptainHindsight.Player
           aimTransform.gameObject.SetActive(true);
           _isEquipped = true;
           _equipmentController.ChangeEquipment(equipmentSlot);
-          mEquipmentModifier = _equipmentController.GetWalkSpeedModifier(equipmentSlot);
+          _mEquipmentModifier = _equipmentController.GetWalkSpeedModifier(equipmentSlot);
           UpdateSolverWeights(true);
         }
         else
@@ -430,6 +446,7 @@ namespace CaptainHindsight.Player
       _playerInputActions.Player.EquipmentSlot3.performed += _ => Equip(3);
       _playerInputActions.Player.ChangeEquipment.performed += ChangeEquipment;
       _playerInputActions.Player.Pause.performed += Pause;
+      _movement = _playerInputActions.Player.Movement;
       EventManager.Instance.OnDialogueStateChange += ActionDialogueStateChange;
       EventManager.Instance.OnActiveSkillsChange += ActionActiveSkillsChange;
     }
@@ -437,6 +454,7 @@ namespace CaptainHindsight.Player
     protected override void OnDestroy()
     {
       base.OnDestroy();
+      _movement.Disable();
       _playerInputActions.Player.Interact.performed -= Interact;
       _playerInputActions.Player.Pause.performed -= Pause;
       _playerInputActions.Player.ChangeEquipment.performed -= ChangeEquipment;

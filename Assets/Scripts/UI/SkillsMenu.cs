@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CaptainHindsight.Core;
+using CaptainHindsight.Data.Skills;
 using CaptainHindsight.Directors;
 using CaptainHindsight.Managers;
 using CaptainHindsight.Player;
