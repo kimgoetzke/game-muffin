@@ -24,7 +24,7 @@ namespace CaptainHindsight.UI
     [SerializeField] [ListDrawerSettings(ShowFoldout = true)] [ChildGameObjectsOnly]
     private RectTransform[] buttons;
 
-    [HideInInspector] private bool _gameIsPaused = false;
+    private bool _gameIsPaused;
 
     [Title("Game Over menu")] [SerializeField] [Required]
     private TextMeshProUGUI titleMesh;
@@ -38,10 +38,17 @@ namespace CaptainHindsight.UI
 
     [SerializeField] [Required] public BaseSubMenu skillMenu;
 
-    private void Awake()
+    protected override void Awake()
     {
+      base.Awake();
+      EventManager.Instance.OnPauseMenuRequest += AttemptToPauseOrUnpause;
+        
       subTitleMesh.gameObject.SetActive(false);
       tryAgainButton.SetActive(false);
+      
+      // Without this the pause menu will block interactions with other menus
+      // (such as an end of level menu) and possibly a touch controller
+      raycaster.enabled = false;
     }
 
     #region Game Over menu
@@ -190,16 +197,24 @@ namespace CaptainHindsight.UI
     {
       var sequence = DOTween.Sequence().SetUpdate(UpdateType.Normal, true);
       foreach (var button in buttons)
-        if (button.gameObject.activeSelf == true)
+      {
+        if (button.gameObject.activeSelf)
           sequence.Append(button.DOAnchorPosY(25, 0.2f).SetEase(Ease.Linear));
+      }
     }
 
     private void MoveButtonsOutOfView()
     {
       var sequence = DOTween.Sequence().SetUpdate(UpdateType.Normal, true);
       foreach (var button in buttons)
-        if (button.gameObject.activeSelf == true)
-          sequence.Append(button.DOAnchorPosY(-60, 0.2f).SetEase(Ease.Linear));
+      {
+        if (button.gameObject.activeSelf)
+        {
+          sequence
+            .Append(button.DOAnchorPosY(-60, 0.2f)
+            .SetEase(Ease.Linear));
+        }
+      }
     }
 
     public void ReturnFromSubMenu()
@@ -248,14 +263,6 @@ namespace CaptainHindsight.UI
       else if (state == GameState.Tutorial || state == GameState.Transition)
         LockPauseMenu(true);
       else if (state == GameState.Play) LockPauseMenu(false);
-    }
-
-    protected override void OnEnable()
-    {
-      base.OnEnable();
-      EventManager.Instance.OnPauseMenuRequest += AttemptToPauseOrUnpause;
-      raycaster.enabled =
-        false; // Without this the pause menu will block interactions with other menus (such as an end of level menu) and possible a touch controller
     }
 
     protected override void OnDestroy()

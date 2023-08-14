@@ -18,11 +18,11 @@ namespace CaptainHindsight.NPCs
     [BoxGroup("Base Stats")]
     [Title("Current Health", bold: false, horizontalLine: false,
       titleAlignment: TitleAlignments.Centered)]
-    [GUIColor(0.3f, 0.8f, 0.8f, 1f)]
+    [GUIColor(0.3f, 0.8f, 0.8f)]
     [HideLabel]
     [ShowInInspector]
     [ReadOnly]
-    [ProgressBar(0, "maxHealth", ColorGetter = "GetHealthBarColor", Height = 25)]
+    [ProgressBar(0, "maxHealth", Height = 25)]
     [PropertySpace(SpaceBefore = -10, SpaceAfter = 10)]
     private int _currentHealth;
 
@@ -149,9 +149,10 @@ namespace CaptainHindsight.NPCs
     private void Die(Transform origin)
     {
       foreach (var observer in _observers)
-        if (observer is OriginObserver originObserver)
-          originObserver.ProcessInformation(origin);
+      {
+        if (observer is OriginObserver originObserver) originObserver.ProcessInformation(origin);
         else observer.ProcessInformation();
+      }
 
       EventManager.Instance.EnemyDies(origin, experienceReleased);
 

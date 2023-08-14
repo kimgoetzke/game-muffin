@@ -27,10 +27,7 @@ namespace CaptainHindsight.UI
     [SerializeField] [Required] [LabelText("Text colour")]
     private Color taskIncompleteColour;
 
-    [SerializeField] [Required] [LabelText("Text alpha")]
-    private float transparencyIncomplete;
-
-    private bool _status = false;
+    private bool _status;
 
 
     public void InitialiseTask(string text, bool complete)

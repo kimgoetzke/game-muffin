@@ -12,7 +12,7 @@ namespace CaptainHindsight.Quests
     [Title("If")] [LabelText("Quest")] [SerializeField] [Required]
     private QuestData questData;
 
-    [HideInInspector] [ReadOnly] private Quest _quest;
+    private Quest _quest;
 
     [LabelText("Is")] [SerializeField] [Required]
     private bool isIn;
@@ -29,7 +29,7 @@ namespace CaptainHindsight.Quests
     [Title("Then")] [LabelText("Activate these objects")] [SerializeField] [Required]
     private GameObject[] objectsToActivate;
 
-    [LabelText("And dectivate these objects")] [SerializeField] [Required]
+    [LabelText("And deactivate these objects")] [SerializeField] [Required]
     private GameObject[] objectsToDeactivate;
 
     private void Start()

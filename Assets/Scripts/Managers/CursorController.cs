@@ -5,6 +5,7 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+// ReSharper disable PossibleLossOfFraction
 namespace CaptainHindsight.Managers
 {
   public class CursorController : MonoBehaviour
@@ -21,9 +22,9 @@ namespace CaptainHindsight.Managers
         index = 0;
       }
 
-      Vector2 cursorCenter;
-      if (cursorList[index].cursorCenter == CursorCenter.TopLeft) cursorCenter = Vector2.zero;
-      else cursorCenter = CalculateCursorCenter(cursorList[index].cursorTexture);
+      var cursorCenter = cursorList[index].cursorCenter == CursorCenter.TopLeft
+        ? Vector2.zero
+        : CalculateCursorCenter(cursorList[index].cursorTexture);
 
       Cursor.SetCursor(cursorList[index].cursorTexture, cursorCenter, cursorList[index].cursorMode);
     }

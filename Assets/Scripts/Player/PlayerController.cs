@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using CaptainHindsight.Core;
 using CaptainHindsight.Data.GameStates;
@@ -18,6 +20,7 @@ namespace CaptainHindsight.Player
   {
     [Header("General")] private Rigidbody _rb;
     private Animator _playerAnimator;
+    private AnimationClip _currentAnimation;
     private readonly Dictionary<int, string> _animationDirectionsList = new();
     private bool _isDead;
     private static readonly int MoveSpeed = Animator.StringToHash("moveSpeed");
@@ -34,15 +37,19 @@ namespace CaptainHindsight.Player
     [Required] [SerializeField] private Solver2D[] leftArmSolvers;
 
     [Title("Movement")] 
+    [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float mSpeed;
     [SerializeField] private float mMaxSpeed;
     [ShowInInspector, ReadOnly] private float _mEquipmentModifier = 1f;
+    [SerializeField] private float mSlopeAngle = 45f;
     private PlayerInputActions _playerInputActions;
-    private InputAction _movement;
+    private InputAction _moveInput;
     private int _currentDirection;
     private bool _canMove;
     private bool _isMoving;
+    private bool _isMovingBackwards;
     private MouseController _mouseController;
+    private bool _isMouseControlled;
 
     [Title("Equipment")] private int _currentEquipmentSlot = 1;
     private int _availableEquipmentSlots;
@@ -72,13 +79,19 @@ namespace CaptainHindsight.Player
 
     #region Awake & Start
 
-    private void Awake()
+    protected override void Awake()
     {
+      base.Awake();
+      SubscribeToEvents();
+      
       // Deactivate all skeletons
       foreach (var skeleton in playerSkeletons) skeleton.gameObject.SetActive(false);
 
       // Get references
       _rb = GetComponent<Rigidbody>();
+      _equipmentController = equipmentTransform.GetComponent<EquipmentController>();
+      _mEquipmentModifier = _equipmentController.GetWalkSpeedModifier(1);
+      _availableEquipmentSlots = _equipmentController.GetEquipmentQuantity();
 
       // Create list of directions and activate default skeleton
       CreateListOfDirectionalAnimations();
@@ -92,169 +105,8 @@ namespace CaptainHindsight.Player
     private void Start()
     {
       _mouseController = MouseController.Instance;
-      _equipmentController = equipmentTransform.GetComponent<EquipmentController>();
-      _mEquipmentModifier = _equipmentController.GetWalkSpeedModifier(1);
-      _availableEquipmentSlots = _equipmentController.GetEquipmentQuantity();
       _playerSkills = PlayerSkillsManager.Instance;
     }
-
-    #endregion
-
-    private void FixedUpdate()
-    {
-      Helper.Log($"[PlayerController] {_movement.ReadValue<Vector2>()}.");
-      if (_canMove)
-      {
-        var lookDirection = _mouseController.mpGroundLevel - _rb.position;
-        var skeletalDirection = Helper.ConvertDirectionToIndex(lookDirection);
-
-        // Use correct skeletal rig
-        UpdateSkeleton(skeletalDirection);
-
-        // Adjust equipment sprite based on look direction
-        UpdateEquipment(skeletalDirection);
-
-        // Aim weapon at mouse (used when moving with keyboard inputs)
-        AimAtMouse(skeletalDirection, lookDirection, out var angle);
-
-        // Adjust position of aim transform depending on direction, speed and status
-        OffsetPositionOfEquipmentTransform(lookDirection, angle, skeletalDirection);
-
-        // Move player using mouse input, if allowed
-        if (_isMoving)
-        {
-          var input = _movement.ReadValue<Vector2>();
-          // _rb.velocity = new Vector3(
-          //   Mathf.Clamp(lookDirection.x * mSpeed, -mMaxSpeed * _mEquipmentModifier,
-          //     mMaxSpeed * _mEquipmentModifier),
-          //   _rb.velocity.y,
-          //   Mathf.Clamp(lookDirection.z * mSpeed, -mMaxSpeed * _mEquipmentModifier,
-          //     mMaxSpeed * _mEquipmentModifier)
-          // );
-          _rb.velocity = new Vector3(
-            Mathf.Clamp(mSpeed * input.x, -mMaxSpeed * _mEquipmentModifier,
-              mMaxSpeed * _mEquipmentModifier),
-            _rb.velocity.y,
-            Mathf.Clamp(mSpeed * input.x, -mMaxSpeed * _mEquipmentModifier,
-              mMaxSpeed * _mEquipmentModifier)
-          );
-        }
-      }
-
-      // Keep attacking while attack button is pressed
-      Attack();
-
-      // Add health if player has health regen skills
-      RegenerateHealth();
-
-      // Update player animator
-      _playerAnimator.SetFloat(MoveSpeed, Mathf.Abs(_rb.velocity.magnitude));
-    }
-
-    public void ForceSetSkeletonW()
-    {
-      UpdateSkeleton(1);
-    }
-
-    public void ForceSetSkeletonE()
-    {
-      UpdateSkeleton(3);
-    }
-
-    #region Managing attacking
-
-    private void Attack()
-    {
-      if (_isAttacking)
-      {
-        if (_isEquipped == false || _canShoot == false) return;
-        _equipmentController.Attack(transform.position);
-      }
-    }
-
-    #endregion
-
-    #region InputAction: Interact
-
-    private void Interact(InputAction.CallbackContext context)
-    {
-      var colliders = Physics.OverlapSphere(transform.position, 5f, interactionLayer);
-
-      // Helper.Log("[PlayerController] Detected " + colliders.Length + " colliders.");
-      foreach (var t in colliders)
-        t.GetComponent<IInteractable>().Interact(transform.position);
-      // Helper.Log("[PlayerController] Interacted with " + colliders[i].transform.parent.name + " (" + colliders[i].name + ").");
-    }
-
-    #endregion
-
-    #region InputAction: Pause
-
-    private async void Pause(InputAction.CallbackContext context)
-    {
-      if (_isDead) return;
-
-      if (context.phase != InputActionPhase.Performed) return;
-      await Task.Yield();
-      EventManager.Instance.RequestPauseMenu();
-    }
-
-    #endregion
-
-    #region Managing aiming
-
-    private void AimAtMouse(int skeletalDirection, Vector3 lookDirection, out float angle)
-    {
-      angle = 0;
-      if (skeletalDirection == 0 && lookDirection.magnitude < 1.3f)
-      {
-        equipmentTransform.eulerAngles = new Vector3(-20f, 0f, 90f); //new Vector3(45f, 0f, 90f);
-      }
-      else
-      {
-        var position = transform.position;
-        var modifiedPosition = new Vector3(position.x, position.y + 0.75f,
-          position.z + 0.5f); // transform.position.z + 0.5f
-        var aimDirection = (_mouseController.mpGroundLevel - modifiedPosition).normalized;
-        angle = Mathf.Atan2(aimDirection.z, aimDirection.x) * Mathf.Rad2Deg;
-        equipmentTransform.eulerAngles = new Vector3(45f, 0f, angle + 180f);
-      }
-    }
-
-    private void OffsetPositionOfEquipmentTransform(Vector3 lookDirection, float angle,
-      int skeletalDirection)
-    {
-      // Only calculate offsets when anything is equipped
-      if (_isEquipped == false) return;
-
-      // Set base variables
-      var unadjustedXPosition = equipmentTransform.localPosition.x - _lastFrameXOffset;
-      var adjustedAngle = Mathf.Abs(angle - 90f) / 90f;
-      _offsetX = 0;
-
-      // Move the transform further towards the player when aiming above the player
-      if (skeletalDirection == 0) _offsetY = 0.15f * (1 - adjustedAngle);
-      else if (adjustedAngle < 1f) _offsetY = 0.075f * (1 - adjustedAngle);
-      else _offsetY = 0;
-
-      // Move the transform further away from the player when moving West/East
-      if (_isMoving)
-      {
-        if (_currentDirection == 1)
-          _offsetX = Mathf.Clamp01(Mathf.Abs(lookDirection.magnitude) / 2) * -0.1f;
-        else if (_currentDirection == 3)
-          _offsetX = Mathf.Clamp01(Mathf.Abs(lookDirection.magnitude) / 2) * 0.1f;
-      }
-
-      equipmentTransform.localPosition =
-        new Vector3(unadjustedXPosition + _offsetX, 0.75f - _offsetY, 0);
-      _lastFrameXOffset = _offsetX;
-      // Helper.Log("Angle: " + angle + ", offsetX: " + offsetX + ", offsetY: " + offsetY + ".");
-    }
-
-    #endregion
-
-    #region Managing skeleton and player animations
 
     private void CreateListOfDirectionalAnimations()
     {
@@ -264,9 +116,63 @@ namespace CaptainHindsight.Player
       _animationDirectionsList.Add(3, "moveE");
     }
 
+    #endregion
+
+    private void FixedUpdate()
+    {
+      if (_canMove)
+      {
+        var lookDirection = _mouseController.mpGroundLevel - _rb.position;
+        var skeletalDirection = _currentDirection;
+        if (_isEquipped)
+        {
+          skeletalDirection = Helper.ConvertDirectionToIndex(lookDirection);
+        }
+        else if (_rb.velocity.sqrMagnitude > 0.01f)
+        {
+          skeletalDirection = Helper.ConvertDirectionToIndex(_rb.velocity);
+        }
+
+        // Use correct skeletal rig
+        UpdateSkeleton(skeletalDirection);
+
+        if (_isEquipped)
+        {
+          // Adjust equipment sprite based on look direction
+          UpdateEquipment(skeletalDirection);
+
+          // Aim weapon at mouse
+          AimAtMouse(skeletalDirection, lookDirection, out var angle);
+
+          // Adjust position of aim transform depending on direction, speed and status
+          OffsetPositionOfEquipmentTransform(lookDirection, angle, skeletalDirection);
+        }
+
+        // Make sure player cannot walk step slopes and slides down, if appropriate
+        // SlideSlopes();
+        
+        if (_isMoving)
+        {
+          // Move player using any input method
+          Move(lookDirection);
+        }
+      }
+
+      // Keep attacking while attack button is pressed
+      Attack();
+
+      // Add health if player has health regen skills
+      RegenerateHealth();
+
+      // Update player animator (regardless of movement, so that idle animations are played too)
+      _playerAnimator.SetFloat(MoveSpeed,
+        _isMovingBackwards ? _rb.velocity.magnitude * -1 : _rb.velocity.magnitude);
+    }
+
+    #region Managing skeleton and player animator
+
     private void UpdateSkeleton(int direction)
     {
-      // Guard clause to prevent constant updating
       if (direction == _currentDirection) return;
 
       // Update current direction
@@ -313,22 +219,21 @@ namespace CaptainHindsight.Player
     }
 
     #endregion
-
+    
     #region Managing equipment
 
     private void ChangeEquipment(InputAction.CallbackContext context)
     {
-      if (context.phase == InputActionPhase.Performed)
+      if (context.phase != InputActionPhase.Performed) return;
+
+      var slot = _currentEquipmentSlot;
+      if (context.ReadValue<float>() < 0)
       {
-        var slot = _currentEquipmentSlot;
-        if (context.ReadValue<float>() < 0)
-        {
-          Equip(Mathf.Clamp(slot - 1, 1, _availableEquipmentSlots));
-        }
-        else if (context.ReadValue<float>() > 0)
-        {
-          Equip(Mathf.Clamp(slot + 1, 1, _availableEquipmentSlots));
-        }
+        Equip(Mathf.Clamp(slot - 1, 1, _availableEquipmentSlots));
+      }
+      else if (context.ReadValue<float>() > 0)
+      {
+        Equip(Mathf.Clamp(slot + 1, 1, _availableEquipmentSlots));
       }
     }
 
@@ -343,6 +248,7 @@ namespace CaptainHindsight.Player
         _currentEquipmentSlot = equipmentSlot;
         aimTransform.gameObject.SetActive(false);
         _isEquipped = false;
+        _isMovingBackwards = false;
         _mEquipmentModifier = _equipmentController.GetWalkSpeedModifier(equipmentSlot);
         UpdateSolverWeights(false);
         EventManager.Instance.ChangeCursor(0);
@@ -371,9 +277,167 @@ namespace CaptainHindsight.Player
 
     private void UpdateEquipment(int direction)
     {
-      // Guard clause to prevent constant updating
-      if (_isEquipped == false) return;
       _equipmentController.ChangeDirection(direction, false);
+    }
+
+    #endregion
+    
+    #region Managing aiming
+
+    private void AimAtMouse(int skeletalDirection, Vector3 lookDirection, out float angle)
+    {
+      angle = 0;
+      if (skeletalDirection == 0 && lookDirection.magnitude < 1.3f)
+      {
+        equipmentTransform.eulerAngles = new Vector3(-20f, 0f, 90f);
+      }
+      else
+      {
+        var position = transform.position;
+        var modifiedPosition = new Vector3(position.x, position.y + 0.75f,
+          position.z + 0.5f);
+        var aimDirection = (_mouseController.mpGroundLevel - modifiedPosition).normalized;
+        angle = Mathf.Atan2(aimDirection.z, aimDirection.x) * Mathf.Rad2Deg;
+        equipmentTransform.eulerAngles = new Vector3(45f, 0f, angle + 180f);
+      }
+    }
+
+    private void OffsetPositionOfEquipmentTransform(Vector3 lookDirection, float angle,
+      int skeletalDirection)
+    {
+      // Set base variables
+      var unadjustedXPosition = equipmentTransform.localPosition.x - _lastFrameXOffset;
+      var adjustedAngle = Mathf.Abs(angle - 90f) / 90f;
+      _offsetX = 0;
+
+      // Move the transform further towards the player when aiming above the player
+      if (skeletalDirection == 0) _offsetY = 0.15f * (1 - adjustedAngle);
+      else if (adjustedAngle < 1f) _offsetY = 0.075f * (1 - adjustedAngle);
+      else _offsetY = 0;
+
+      // Move the transform further away from the player when moving West/East
+      if (_isMoving && _isMovingBackwards == false)
+      {
+        if (_currentDirection == 1)
+          _offsetX = Mathf.Clamp01(Mathf.Abs(lookDirection.magnitude) / 2) * -0.1f;
+        else if (_currentDirection == 3)
+          _offsetX = Mathf.Clamp01(Mathf.Abs(lookDirection.magnitude) / 2) * 0.1f;
+      }
+
+      equipmentTransform.localPosition =
+        new Vector3(unadjustedXPosition + _offsetX, 0.75f - _offsetY, 0);
+      _lastFrameXOffset = _offsetX;
+      // Helper.Log("Angle: " + angle + ", offsetX: " + offsetX + ", offsetY: " + offsetY + ".");
+    }
+
+    #endregion
+    
+    #region Managing slopes
+    
+    private void SlideSlopes()
+    {
+      RaycastHit[] hitsResults = new RaycastHit[5];
+      Physics.RaycastNonAlloc(transform.position, transform.TransformDirection(Vector3.down),
+        hitsResults, 2f, groundLayer);
+
+      foreach (var hit in hitsResults)
+      {
+        // var collider = hit.collider;
+        var angle = Vector3.Angle(Vector3.up, hit.normal);
+        Debug.DrawLine(hit.point, hit.point + hit.normal, Color.red, 1f);
+        Helper.Log(angle.ToString(CultureInfo.InvariantCulture));
+
+        if (angle > mSlopeAngle)
+        {
+          var normal = hit.normal;
+          var yInverse = 1f - normal.y;
+          var velocity = _rb.velocity;
+          // velocity.x += yInverse * normal.x;
+          // velocity.z += yInverse * normal.z;
+          velocity = new Vector3(velocity.x + yInverse * normal.x, velocity.y,
+            velocity.z + yInverse * normal.z);
+          _rb.velocity = velocity;
+        }
+      }
+    }
+
+    #endregion
+
+    #region InputAction: Move
+
+    private void Move(Vector3 lookDirection)
+    {
+      var minClamp = _isMovingBackwards
+        ? -1 * _mEquipmentModifier
+        : -mMaxSpeed * _mEquipmentModifier;
+      var maxClamp = _isMovingBackwards
+        ? 1 * _mEquipmentModifier
+        : mMaxSpeed * _mEquipmentModifier;
+
+      if (_isMouseControlled)
+      {
+        _rb.velocity = new Vector3(
+          Mathf.Clamp(lookDirection.x * mSpeed, minClamp, maxClamp),
+          _rb.velocity.y,
+          Mathf.Clamp(lookDirection.z * mSpeed, minClamp, maxClamp)
+        );
+      }
+      else
+      {
+        var input = _moveInput.ReadValue<Vector2>();
+        var moveDirection = new Vector3(
+          Mathf.Clamp(mSpeed * input.x * mMaxSpeed, minClamp, maxClamp),
+          _rb.velocity.y,
+          Mathf.Clamp(mSpeed * input.y * mMaxSpeed, minClamp, maxClamp)
+        );
+
+        if (_isEquipped)
+        {
+          var dotProduct = Vector3.Dot(lookDirection, moveDirection);
+          _isMovingBackwards = dotProduct < 0;
+        }
+
+        _rb.velocity = moveDirection;
+      }
+    }
+    #endregion
+    
+    #region InputAction: Attack
+
+    private void Attack()
+    {
+      if (_isAttacking == false) return;
+      if (_isEquipped == false || _canShoot == false) return;
+      _equipmentController.Attack(transform.position);
+    }
+
+    #endregion
+
+    #region InputAction: Interact
+
+    private void Interact(InputAction.CallbackContext context)
+    {
+      var hitColliders = new Collider[5];
+      var numColliders =
+        Physics.OverlapSphereNonAlloc(transform.position, 4f, hitColliders, interactionLayer);
+
+      for (var i = 0; i < numColliders; i++)
+      {
+        hitColliders[i].GetComponent<IInteractable>().Interact(transform.position);
+      }
+    }
+
+    #endregion
+
+    #region InputAction: Pause
+
+    private async void Pause(InputAction.CallbackContext context)
+    {
+      if (_isDead) return;
+
+      if (context.phase != InputActionPhase.Performed) return;
+      await Task.Yield();
+      EventManager.Instance.RequestPauseMenu();
     }
 
     #endregion
@@ -409,6 +473,18 @@ namespace CaptainHindsight.Player
     }
 
     #endregion
+    
+    #region Managing timeline events
+    public void ForceSetSkeletonW()
+    {
+      UpdateSkeleton(1);
+    }
+
+    public void ForceSetSkeletonE()
+    {
+      UpdateSkeleton(3);
+    }
+    #endregion
 
     #region Managing events
 
@@ -431,22 +507,26 @@ namespace CaptainHindsight.Player
       _availableEquipmentSlots = _equipmentController.GetEquipmentQuantity();
     }
 
-    protected override void OnEnable()
+    private void SubscribeToEvents()
     {
-      base.OnEnable();
       _playerInputActions = new PlayerInputActions();
       _playerInputActions.Player.Enable();
       _playerInputActions.Player.Attack.started += _ => _isAttacking = true;
       _playerInputActions.Player.Attack.canceled += _ => _isAttacking = false;
       _playerInputActions.Player.Interact.performed += Interact;
+      _playerInputActions.Player.MoveMouse.started += _ => _isMoving = true;
+      _playerInputActions.Player.MoveMouse.started += _ => _isMouseControlled = true;
+      _playerInputActions.Player.MoveMouse.canceled += _ => _isMoving = false;
+      _playerInputActions.Player.MoveMouse.canceled += _ => _isMouseControlled = false;
       _playerInputActions.Player.Move.started += _ => _isMoving = true;
       _playerInputActions.Player.Move.canceled += _ => _isMoving = false;
+      _playerInputActions.Player.Move.canceled += _ => _isMovingBackwards = false;
       _playerInputActions.Player.EquipmentSlot1.performed += _ => Equip(1);
       _playerInputActions.Player.EquipmentSlot2.performed += _ => Equip(2);
       _playerInputActions.Player.EquipmentSlot3.performed += _ => Equip(3);
       _playerInputActions.Player.ChangeEquipment.performed += ChangeEquipment;
       _playerInputActions.Player.Pause.performed += Pause;
-      _movement = _playerInputActions.Player.Movement;
+      _moveInput = _playerInputActions.Player.Move;
       EventManager.Instance.OnDialogueStateChange += ActionDialogueStateChange;
       EventManager.Instance.OnActiveSkillsChange += ActionActiveSkillsChange;
     }
@@ -454,7 +534,7 @@ namespace CaptainHindsight.Player
     protected override void OnDestroy()
     {
       base.OnDestroy();
-      _movement.Disable();
+      _moveInput.Disable();
       _playerInputActions.Player.Interact.performed -= Interact;
       _playerInputActions.Player.Pause.performed -= Pause;
       _playerInputActions.Player.ChangeEquipment.performed -= ChangeEquipment;

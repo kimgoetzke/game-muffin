@@ -1,28 +1,31 @@
+using System.Collections.Generic;
+using CaptainHindsight.Core.Observer;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace CaptainHindsight.Core.StateMachine
 {
-  public class BStateMachine : MonoBehaviour
+  public class BStateMachine : MonoBehaviour, IObservable
   {
-    private BState currentState;
+    private BState _currentState;
+    
+    [FoldoutGroup("Observers", true)] [ShowInInspector] [ReadOnly]
+    private List<Observer.Observer> _observers = new();
 
     private void Start()
     {
-      currentState = GetInitialState();
-      if (currentState != null)
-        currentState.Enter();
+      _currentState = GetInitialState();
+      _currentState?.Enter();
     }
 
     private void Update()
     {
-      if (currentState != null)
-        currentState.UpdateLogic();
+      _currentState?.UpdateLogic();
     }
 
     private void LateUpdate()
     {
-      if (currentState != null)
-        currentState.UpdatePhysics();
+      _currentState?.UpdatePhysics();
     }
 
     protected virtual BState GetInitialState()
@@ -32,9 +35,18 @@ namespace CaptainHindsight.Core.StateMachine
 
     public void SwitchState(BState newState)
     {
-      currentState.Exit();
-      currentState = newState;
+      _currentState.Exit();
+      _currentState = newState;
+      foreach (var observer in _observers)
+      {
+        if (observer is NpcObserver npcObserver) npcObserver.ProcessInformation(newState);
+      }
       newState.Enter();
+    }
+    
+    public void RegisterObserver(Observer.Observer observer)
+    {
+      _observers.Add(observer);
     }
 
     //private void OnGUI()

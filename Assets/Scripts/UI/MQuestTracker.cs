@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using CaptainHindsight.Directors;
-using CaptainHindsight.Managers;
 using CaptainHindsight.Quests;
 using Sirenix.OdinInspector;
 using TMPro;
@@ -9,7 +7,7 @@ using static CaptainHindsight.Quests.Quest;
 
 namespace CaptainHindsight.UI
 {
-  public class MQuestTracker : MonoBehaviour
+  public class MQuestTracker : QuestStateBehaviour
   {
     [Title("Configuration")] [SerializeField] [Required]
     private TextMeshProUGUI titleMesh;
@@ -18,7 +16,7 @@ namespace CaptainHindsight.UI
     [SerializeField] [Required] private GameObject questHolder;
     [ShowInInspector] [ReadOnly] private List<MQuestTrackerTask> _mQuestTrackerTasks = new();
 
-    private void ActionQuestUpdate(Quest quest, bool onlyStateChange)
+    protected override void ActionQuestUpdate(Quest quest, bool onlyStateChange)
     {
       // For debugging:
       // Helper.Log("[MQuestTracker] Updates to '" + quest.QuestData.Name + "' (onlyStateChange=" + onlyStateChange.ToString().ToUpper() + ") are being processed.");
@@ -34,9 +32,13 @@ namespace CaptainHindsight.UI
     private void ActionQuestStateChange(Quest quest)
     {
       if (quest.state == QuestState.Completed)
+      {
         ResetQuestTracker();
+      }
       else
+      {
         InitialiseQuestTracker(quest);
+      }
     }
 
     private void ResetQuestTracker()
@@ -85,16 +87,6 @@ namespace CaptainHindsight.UI
           allComplete = false;
 
       if (allComplete) titleMesh.text += " [DONE]";
-    }
-
-    private void OnEnable()
-    {
-      EventManager.Instance.OnQuestStateChange += ActionQuestUpdate;
-    }
-
-    private void OnDisable()
-    {
-      EventManager.Instance.OnQuestStateChange -= ActionQuestUpdate;
     }
   }
 }

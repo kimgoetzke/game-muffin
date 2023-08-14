@@ -22,10 +22,16 @@ namespace CaptainHindsight.UI
       if (gameObject != null && gameObjectsToHide.Count > 0)
         gameObjectsToHide.ForEach(go => go.SetActive(settings.ShowInGameUI));
     }
-
-    private void OnDisable()
-    {
-      GameStateDirector.OnGameStateChange -= ActionGameStateChange;
-    }
+    
+    // TODO: Remove this if no issues arise (changed on 06/08/2023)
+    // private void OnEnable()
+    // {
+    //   GameStateDirector.OnGameStateChange += ActionGameStateChange;
+    // }
+    //
+    // private void OnDisable()
+    // {
+    //   GameStateDirector.OnGameStateChange -= ActionGameStateChange;
+    // }
   }
 }

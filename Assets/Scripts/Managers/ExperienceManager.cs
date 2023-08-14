@@ -24,7 +24,7 @@ namespace CaptainHindsight.Managers
     [HideLabel]
     [ShowInInspector]
     [ReadOnly]
-    [ProgressBar(0, "experienceToNextLevel", Height = 25)]
+    [ProgressBar(0, "_experienceToNextLevel", Height = 25)]
     [PropertySpace(SpaceBefore = -10, SpaceAfter = 10)]
     private int _currentExperience;
 

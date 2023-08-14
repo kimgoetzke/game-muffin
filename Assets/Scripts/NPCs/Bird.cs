@@ -9,12 +9,12 @@ namespace CaptainHindsight.NPCs
 {
   public class Bird : MonoBehaviour
   {
-    [ShowInInspector] [ProgressBar(1, 10)] private int _timeToFlyOff = 2;
+    [SerializeField] [ProgressBar(1, 10)] private int timeToFlyOff = 2;
 
-    [ShowInInspector] [ProgressBar(0, 60, 1, 1, 0)]
-    private int _midAirDelay = 2;
+    [SerializeField] [ProgressBar(0, 60, 1, 1, 0)]
+    private int midAirDelay = 2;
 
-    [ShowInInspector] [ProgressBar(1, 20)] private int _timeToLandAgain = 5;
+    [SerializeField] [ProgressBar(1, 20)] private int timeToLandAgain = 5;
 
     private Animator _animator;
     private Vector3 _currentPosition;
@@ -58,9 +58,9 @@ namespace CaptainHindsight.NPCs
       _animator.SetInteger(Idle, Random.Range(0, 5));
     }
 
-    private void OnTriggerEnter(Collider collider)
+    private void OnTriggerEnter(Collider other)
     {
-      if (collider.gameObject.CompareTag("Player") || collider.gameObject.CompareTag("Bullet"))
+      if (other.gameObject.CompareTag("Player") || other.gameObject.CompareTag("Bullet"))
       {
         FlyOff();
         LandAgain();
@@ -82,7 +82,7 @@ namespace CaptainHindsight.NPCs
 
       await Task.Delay(System.TimeSpan.FromSeconds(Mathf.Abs(_swarmDifferentiator / 2)));
       _audioOneShot.Play();
-      transform.DOLocalMove(destination, _timeToFlyOff + _swarmDifferentiator).SetEase(Ease.InSine);
+      transform.DOLocalMove(destination, timeToFlyOff + _swarmDifferentiator).SetEase(Ease.InSine);
       // Helper.Log("[Bird] Flying off to " + destination + ".");
     }
 
@@ -92,17 +92,17 @@ namespace CaptainHindsight.NPCs
       {
         // Delay landing
         await Task.Delay(
-          System.TimeSpan.FromSeconds(_timeToFlyOff + _midAirDelay + _swarmDifferentiator * 2));
+          System.TimeSpan.FromSeconds(timeToFlyOff + midAirDelay + _swarmDifferentiator * 2));
 
         // Flip sprite and fly back
         FlipSpriteOnXAxis();
-        transform.DOMove(_currentPosition, _timeToLandAgain + _swarmDifferentiator)
+        transform.DOMove(_currentPosition, timeToLandAgain + _swarmDifferentiator)
           .SetEase(Ease.InOutSine);
-        await Task.Delay(System.TimeSpan.FromSeconds(_timeToLandAgain + _swarmDifferentiator));
+        await Task.Delay(System.TimeSpan.FromSeconds(timeToLandAgain + _swarmDifferentiator));
 
         // Switch to idle animation if landing was expected
-        var expectedLandingTime = _previouslyTriggered + _timeToFlyOff + _midAirDelay +
-                                  _timeToLandAgain + _swarmDifferentiator * 3;
+        var expectedLandingTime = _previouslyTriggered + timeToFlyOff + midAirDelay +
+                                  timeToLandAgain + _swarmDifferentiator * 3;
         var actualTime = Time.fixedTime;
         if (actualTime >= expectedLandingTime - 0.5f) _animator.SetBool(Fly, false);
         // Helper.Log("[Bird] Landing again. Expected landing: " + expectedLandingTime + " vs actual: " + actualTime + ".");

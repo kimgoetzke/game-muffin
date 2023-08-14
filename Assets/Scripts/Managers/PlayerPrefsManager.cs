@@ -17,6 +17,8 @@ namespace CaptainHindsight.Managers
     [TitleGroup("Settings")] [SerializeField] [Required]
     private List<SpawnPoint> sceneChangePoints = new();
 
+    private Transform _player;
+
     #region Managing Unity Editor-only buttons
 
     [TitleGroup("Editor actions")]
@@ -42,11 +44,11 @@ namespace CaptainHindsight.Managers
       });
       Helper.Log("[PlayerPrefsManager] End of PlayerPrefs.");
     }
-
+    
     [HorizontalGroup("Editor actions/Split")]
     [VerticalGroup("Editor actions/Split/Left")]
-    [Button("Delete spawn point", ButtonSizes.Large)]
-    [GUIColor(0.8f, 0, 0)]
+    [Button("Delete spawn point", ButtonSizes.Large), PropertySpace(SpaceBefore = 5)]
+    [GUIColor(1, 0, 0)]
     private void DeletePrefsForSceneViaEditorButton()
     {
       var sceneName = SceneManager.GetActiveScene().name;
@@ -56,7 +58,7 @@ namespace CaptainHindsight.Managers
     }
 
     [VerticalGroup("Editor actions/Split/Right")]
-    [Button("Delete all PlayerPrefs", ButtonSizes.Large)]
+    [Button("Delete all PlayerPrefs", ButtonSizes.Large), PropertySpace(SpaceBefore = 5)]
     [GUIColor(1, 0, 0)]
     private void DeleteAllPrefsViaEditorButton()
     {
@@ -76,6 +78,15 @@ namespace CaptainHindsight.Managers
 
     private void Start()
     {
+      if (GameObject.Find("Player") == null)
+      {
+        Debug.LogError("[PlayerPrefsManager] Player transform not found.");
+      }
+      else
+      {
+        _player = GameObject.Find("Player").transform;
+      }
+
       LoadSpawnPoint();
       var activeScene = SceneManager.GetActiveScene().name;
       if (activeScene.StartsWith("Level")) Save(GlobalConstants.ACTIVE_SCENE, activeScene);
@@ -83,11 +94,13 @@ namespace CaptainHindsight.Managers
 
     #region Managing registration
 
-    public void RegisterSceneChangePoint(string spawnPointName, GameObject timeline)
+    public void RegisterSceneChangePoint(string spawnPointName, GameObject timeline,
+      Vector3 position)
     {
       var spawnPoint = new SpawnPoint
       {
         name = spawnPointName,
+        position = position,
         timeline = timeline
       };
       sceneChangePoints.Add(spawnPoint);
@@ -100,22 +113,22 @@ namespace CaptainHindsight.Managers
 
     private void LoadSpawnPoint()
     {
-      if (PlayerPrefs.HasKey(GlobalConstants.PREVIOUS_SCENE_EXIT_SPAWN))
-      {
-        var previousSceneExit = PlayerPrefs.GetString(GlobalConstants.PREVIOUS_SCENE_EXIT_SPAWN);
-        var spawnPoint = sceneChangePoints.Find(s => s.name == previousSceneExit);
-        if (spawnPoint == null)
-        {
-          Helper.LogWarning("[PlayerPrefsManager] Failed to load: '" + previousSceneExit +
-                            "' not found. Please review your PlayerPrefsManager for this scene " +
-                            "and make sure it contains all relevant entrance/exit points.");
-          return;
-        }
+      if (PlayerPrefs.HasKey(GlobalConstants.PREVIOUS_SCENE_EXIT_SPAWN) == false) return;
 
-        // Helper.Log("[PlayerPrefsManager] Loaded: '" + spawnPoint.name + "' for '" +
-        //            SceneManager.GetActiveScene().name + "'.");
-        spawnPoint.timeline.SetActive(true);
+      var previousSceneExit = PlayerPrefs.GetString(GlobalConstants.PREVIOUS_SCENE_EXIT_SPAWN);
+      var spawnPoint = sceneChangePoints.Find(s => s.name == previousSceneExit);
+      if (spawnPoint == null)
+      {
+        Helper.LogWarning("[PlayerPrefsManager] Failed to load: '" + previousSceneExit +
+                          "' not found. Please review your PlayerPrefsManager for this scene " +
+                          "and make sure it contains all relevant entrance/exit points.");
+        return;
       }
+
+      Helper.Log(
+        $"[PlayerPrefsManager] Loaded: '{spawnPoint.name}' at {spawnPoint.position} for '{SceneManager.GetActiveScene().name}'.");
+      _player.position = spawnPoint.position;
+      spawnPoint.timeline.SetActive(true);
     }
 
     public List<Quest> LoadQuests()
@@ -157,11 +170,8 @@ namespace CaptainHindsight.Managers
         LogLoadInfo(true, key, value);
         return value;
       }
-      else
-      {
-        LogLoadInfo(false, key);
-      }
 
+      LogLoadInfo(false, key);
       return "";
     }
 
@@ -206,8 +216,8 @@ namespace CaptainHindsight.Managers
       var sceneName = SceneManager.GetActiveScene().name;
       PlayerPrefs.SetString(GlobalConstants.PREVIOUS_SCENE, sceneName);
       PlayerPrefs.SetString(GlobalConstants.PREVIOUS_SCENE_EXIT_SPAWN, spawnPointName);
-      Helper.Log("[PlayerPrefsManager] Saved: Spawn point '" + spawnPointName + "' for '" +
-                 sceneName + "'.");
+      // Helper.Log("[PlayerPrefsManager] Saved: Spawn point '" + spawnPointName + "' for '" +
+      //            sceneName + "'.");
     }
 
     public void Save(string key, List<string> list)
@@ -258,29 +268,29 @@ namespace CaptainHindsight.Managers
 
     private void LogLoadInfo(bool status, string key, string value = null)
     {
-      if (status)
-      {
-        if (value != null)
-          Helper.Log("[PlayerPrefsManager] Loaded: " + key + " = " + value + ".");
-        else Helper.Log("[PlayerPrefsManager] Loaded: " + key + ".");
-      }
-      else
-      {
-        Helper.Log("[PlayerPrefsManager] Failed to load: " + key + ".");
-      }
+      // if (status)
+      // {
+      //   if (value != null)
+      //     Helper.Log("[PlayerPrefsManager] Loaded: " + key + " = " + value + ".");
+      //   else Helper.Log("[PlayerPrefsManager] Loaded: " + key + ".");
+      // }
+      // else
+      // {
+      //   Helper.Log("[PlayerPrefsManager] Failed to load: " + key + ".");
+      // }
     }
 
     private void LogConversionInfo(string json)
     {
-      Helper.Log("[PlayerPrefsManager] Converted list to: " + json);
+      // Helper.Log("[PlayerPrefsManager] Converted list to: " + json);
     }
 
     private void LogSaveInfo(string key, string value = null)
     {
-      if (value == null)
-        Helper.Log("[PlayerPrefsManager] Saved: " + key + ".");
-      else
-        Helper.Log("[PlayerPrefsManager] Saved: " + key + " = " + value + ".");
+      // if (value == null)
+      //   Helper.Log("[PlayerPrefsManager] Saved: " + key + ".");
+      // else
+      //   Helper.Log("[PlayerPrefsManager] Saved: " + key + " = " + value + ".");
     }
 
     #endregion
@@ -304,8 +314,9 @@ namespace CaptainHindsight.Managers
     [Serializable]
     private class SpawnPoint
     {
-      [FormerlySerializedAs("Name")] public string name;
-      [FormerlySerializedAs("Timeline")] public GameObject timeline;
+      public string name;
+      public Vector3 position;
+      public GameObject timeline;
     }
 
     [Serializable]

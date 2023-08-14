@@ -65,6 +65,10 @@ namespace CaptainHindsight.Player
           ObjectPoolManager.Instance.SpawnFromPool("ammo-Impact-Swamp", transform.position,
             _fixedRotation);
           break;
+        case "Metal":
+          ObjectPoolManager.Instance.SpawnFromPool("ammo-Impact-Metal", transform.position,
+            _fixedRotation);
+          break;
         case "NPC":
         case "Player":
           ObjectPoolManager.Instance.SpawnFromPool("ammo-Impact-Flesh", transform.position,

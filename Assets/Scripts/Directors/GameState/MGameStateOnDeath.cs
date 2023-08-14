@@ -3,7 +3,7 @@ using CaptainHindsight.Core.Observer;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace CaptainHindsight.Directors
+namespace CaptainHindsight.Directors.GameState
 {
   public class MGameStateOnDeath : Observer
   {
@@ -12,7 +12,7 @@ namespace CaptainHindsight.Directors
     public override void ProcessInformation()
     {
       if (message == "") Helper.LogWarning("[MGameStateOnDeath] You forgot to set the message.");
-      GameStateDirector.Instance.SwitchState(GameState.GameOver, message);
+      GameStateDirector.Instance.SwitchState(Core.GameState.GameOver, message);
     }
   }
 }

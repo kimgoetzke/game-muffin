@@ -1,3 +1,6 @@
+using CaptainHindsight.Core;
+using CaptainHindsight.Core.Observer;
+using CaptainHindsight.Core.StateMachine;
 using CaptainHindsight.Managers;
 using CaptainHindsight.Other;
 using CaptainHindsight.UI;
@@ -6,9 +9,9 @@ using UnityEngine;
 
 namespace CaptainHindsight.Quests
 {
-  public class QuestGiver : MonoBehaviour, IInteractable
+  public class QuestGiver : NpcObserver, IInteractable
   {
-    [Title("Configuration")] [SerializeField] [Required]
+    [SerializeField] [Required]
     private Transform indicatorTransform;
 
     [SerializeField] [PropertyRange(1, 10)] [OnValueChanged("UpdateInteractionRange")]
@@ -23,6 +26,8 @@ namespace CaptainHindsight.Quests
     [InlineEditor(InlineEditorObjectFieldModes.Foldout, Expanded = false)]
     private QuestData questData;
 
+    [ShowInInspector, ReadOnly] private bool _isBlocked;
+
     #region Unity Editor methods (Odin and OnDrawGizmos)
 
     private void UpdateInteractionRange()
@@ -34,20 +39,37 @@ namespace CaptainHindsight.Quests
 
     #region Awake, Start, and initialisation
 
-    private void Awake()
+    protected override void Awake()
     {
+      base.Awake();
       _inGameUI = indicatorTransform.GetComponentInChildren<MButtonInGame>();
       _inGameUI.InitialiseButton(interactionRange, questData.story.name);
+    }
+
+
+    public override void ProcessInformation(BState state)
+    {
+      _isBlocked = state.name switch
+      {
+        "Attack" => true,
+        _ => false
+      };
     }
 
     #endregion
 
     public void Interact(Vector3 position)
     {
+      if (_isBlocked)
+      {
+        Helper.Log("[QuestGiver] Request ignored. Interaction blocked by another NPC state.");
+        return;
+      }
+
       // TODO: Check interaction range (player's OverlapSphere is much larger to allow for
       // all sorts of interactions, not only with objects right in front of the player)
       var distance = (position - transform.position).magnitude;
-      if (distance >= interactionRange + 0.25f) return; 
+      if (distance >= interactionRange + 0.25f) return;
 
       _inGameUI.Interact();
       EventManager.Instance.TriggerDialogue(questData.story, speaker);

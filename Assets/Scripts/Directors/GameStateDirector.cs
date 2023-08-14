@@ -11,16 +11,16 @@ namespace CaptainHindsight.Directors
     public static GameStateDirector Instance;
 
     [Title("States")] [ShowInInspector] [ReadOnly]
-    private GameState _previousState;
+    private Core.GameState _previousState;
 
-    [SerializeField] private GameState currentState = GameState.Transition;
+    [SerializeField] private Core.GameState currentState = Core.GameState.Transition;
 
     [Title("Settings")]
     [AssetList(Path = "/Data/GameStates/", AutoPopulate = true)]
     [SerializeField]
     private GameStateSettings[] stateSettings; // Error state must be 0 in the list
 
-    public static event Action<GameState, GameStateSettings, string> OnGameStateChange;
+    public static event Action<Core.GameState, GameStateSettings, string> OnGameStateChange;
 
     private void Awake()
     {
@@ -40,14 +40,14 @@ namespace CaptainHindsight.Directors
       _previousState = currentState;
     }
 
-    public void SwitchState(GameState state)
+    public void SwitchState(Core.GameState state)
     {
       SwitchState(state, string.Empty);
     }
 
     #region Switching state method which is called by other classes
 
-    public void SwitchState(GameState state, string message)
+    public void SwitchState(Core.GameState state, string message)
     {
       if (state == currentState)
       {
@@ -60,11 +60,11 @@ namespace CaptainHindsight.Directors
       _previousState = currentState;
 
       // Read settings for state
-      var stateSettings = ReadStateSettings(state);
-      if (stateSettings == null)
+      var currentStateSettings = ReadStateSettings(state);
+      if (currentStateSettings == null)
       {
-        state = GameState.Error;
-        stateSettings = ReadStateSettings(state);
+        state = Core.GameState.Error;
+        currentStateSettings = ReadStateSettings(state);
         Helper.LogError(
           "[GameStateDirector] State settings do not exist. Error state will be triggered.");
       }
@@ -73,36 +73,36 @@ namespace CaptainHindsight.Directors
       //else DebugStateSettings(stateSettings);
 
       // Change time scale
-      UpdateTimeScale(stateSettings.FreezeTime);
+      UpdateTimeScale(currentStateSettings.FreezeTime);
 
       // Exit current game state...
       switch (currentState)
       {
-        case GameState.Tutorial: break;
-        case GameState.Play: break;
-        case GameState.Pause: break;
-        case GameState.GameOver: break;
-        case GameState.Win: break;
-        case GameState.Transition: break;
-        case GameState.Menu: break;
-        case GameState.Error: break;
+        case Core.GameState.Tutorial: break;
+        case Core.GameState.Play: break;
+        case Core.GameState.Pause: break;
+        case Core.GameState.GameOver: break;
+        case Core.GameState.Win: break;
+        case Core.GameState.Transition: break;
+        case Core.GameState.Menu: break;
+        case Core.GameState.Error: break;
       }
 
       // Enter the new game state...
       switch (state)
       {
-        case GameState.Tutorial: break;
-        case GameState.Play: break;
-        case GameState.Pause: break;
-        case GameState.GameOver: break;
-        case GameState.Win: break;
-        case GameState.Transition: break;
-        case GameState.Menu: break;
-        case GameState.Error: break;
+        case Core.GameState.Tutorial: break;
+        case Core.GameState.Play: break;
+        case Core.GameState.Pause: break;
+        case Core.GameState.GameOver: break;
+        case Core.GameState.Win: break;
+        case Core.GameState.Transition: break;
+        case Core.GameState.Menu: break;
+        case Core.GameState.Error: break;
         default:
           Helper.LogError("[GameStateDirector] An unknown state was triggered: " + state +
                           ". Switching to Error state.");
-          state = GameState.Error;
+          state = Core.GameState.Error;
           break;
       }
 
@@ -110,7 +110,7 @@ namespace CaptainHindsight.Directors
       currentState = state;
 
       // Trigger state change event for anyone who's listening
-      OnGameStateChange?.Invoke(state, stateSettings, message);
+      OnGameStateChange?.Invoke(state, currentStateSettings, message);
       Helper.Log("[GameStateDirector] State changed from '" + _previousState + "' to '" +
                  currentState + "' (" +
                  (message == "" ? "no message" : "message='" + message + "'") + ").");
@@ -118,11 +118,12 @@ namespace CaptainHindsight.Directors
 
     #endregion
 
-    private GameStateSettings ReadStateSettings(GameState state)
+    private GameStateSettings ReadStateSettings(Core.GameState state)
     {
-      for (var i = 0; i < stateSettings.Length; i++)
-        if (stateSettings[i].Name == state)
-          return stateSettings[i];
+      foreach (var s in stateSettings)
+      {
+        if (s.Name == state) return s;
+      }
 
       return null;
     }
@@ -132,24 +133,25 @@ namespace CaptainHindsight.Directors
       Time.timeScale = freezeTime ? 0f : 1f;
     }
 
-    public GameState CurrentState()
+    public Core.GameState CurrentState()
     {
       return currentState;
     }
 
     // Only used for trouble shooting
-    private void DebugStateSettings(GameStateSettings currentState)
+    // ReSharper disable once UnusedMember.Local
+    private void DebugStateSettings(GameStateSettings state)
     {
-      for (var i = 0; i < stateSettings.Length; i++)
-        if (stateSettings[i].Name == _previousState)
-        {
-          Helper.Log("[GameStateDirector] Settings for state '" + currentState.Name +
-                     "' requested. Details below.");
-          Helper.Log(" - Show in-game UI: " + currentState.ShowInGameUI + ".");
-          Helper.Log(" - Freeze time: " + currentState.FreezeTime + ".");
-          Helper.Log(" - Show in-game UI: " + currentState.ShowInGameUI + ".");
-          Helper.Log(" - Player can move: " + currentState.PlayerCanMove + ".");
-        }
+      foreach (var s in stateSettings)
+      {
+        if (s.Name != _previousState) continue;
+        Helper.Log("[GameStateDirector] Settings for state '" + state.Name +
+                   "' requested. Details below.");
+        Helper.Log(" - Show in-game UI: " + state.ShowInGameUI + ".");
+        Helper.Log(" - Freeze time: " + state.FreezeTime + ".");
+        Helper.Log(" - Show in-game UI: " + state.ShowInGameUI + ".");
+        Helper.Log(" - Player can move: " + state.PlayerCanMove + ".");
+      }
     }
   }
 }

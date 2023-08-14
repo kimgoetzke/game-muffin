@@ -1,3 +1,4 @@
+using CaptainHindsight.Core.StateMachine;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -8,7 +9,7 @@ namespace CaptainHindsight.Core.Observer
     [TitleGroup("Configuration")] [SerializeField]
     private bool isObservingThis = true;
 
-    [HideIf("isObservingThis", true)] [SerializeField]
+    [HideIf("isObservingThis")] [SerializeField]
     private GameObject observedObject;
 
     protected virtual void Awake()
@@ -43,5 +44,10 @@ namespace CaptainHindsight.Core.Observer
   public abstract class BoolObserver : Observer
   {
     public abstract void ProcessInformation(bool isTrue);
+  }
+  
+  public abstract class NpcObserver : Observer
+  {
+    public abstract void ProcessInformation(BState state);
   }
 }

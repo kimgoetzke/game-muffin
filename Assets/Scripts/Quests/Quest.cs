@@ -123,7 +123,7 @@ namespace CaptainHindsight.Quests
 
       public bool AtLocation(Transform reachedObject)
       {
-        if (locationReached == true) return true;
+        if (locationReached) return true;
 
         if ((reachedObject.position - questTaskData.location).sqrMagnitude < 2f)
         {

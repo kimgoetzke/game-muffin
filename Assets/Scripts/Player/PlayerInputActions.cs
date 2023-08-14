@@ -40,6 +40,15 @@ namespace CaptainHindsight
                 },
                 {
                     ""name"": ""Move"",
+                    ""type"": ""Value"",
+                    ""id"": ""25057031-8d6a-4d6f-85aa-9a58853c9d22"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""MoveMouse"",
                     ""type"": ""Button"",
                     ""id"": ""a112773b-edfb-4c3a-b2e9-24a682bc831b"",
                     ""expectedControlType"": ""Button"",
@@ -100,15 +109,6 @@ namespace CaptainHindsight
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""Movement"",
-                    ""type"": ""Value"",
-                    ""id"": ""25057031-8d6a-4d6f-85aa-9a58853c9d22"",
-                    ""expectedControlType"": ""Vector2"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -141,7 +141,7 @@ namespace CaptainHindsight
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard & Mouse"",
-                    ""action"": ""Move"",
+                    ""action"": ""MoveMouse"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -273,7 +273,7 @@ namespace CaptainHindsight
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Movement"",
+                    ""action"": ""Move"",
                     ""isComposite"": true,
                     ""isPartOfComposite"": false
                 },
@@ -284,7 +284,7 @@ namespace CaptainHindsight
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard & Mouse"",
-                    ""action"": ""Movement"",
+                    ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -295,7 +295,7 @@ namespace CaptainHindsight
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard & Mouse"",
-                    ""action"": ""Movement"",
+                    ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -306,7 +306,7 @@ namespace CaptainHindsight
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard & Mouse"",
-                    ""action"": ""Movement"",
+                    ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -317,7 +317,7 @@ namespace CaptainHindsight
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard & Mouse"",
-                    ""action"": ""Movement"",
+                    ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -328,7 +328,7 @@ namespace CaptainHindsight
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Controller"",
-                    ""action"": ""Movement"",
+                    ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -369,13 +369,13 @@ namespace CaptainHindsight
             m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
             m_Player_Attack = m_Player.FindAction("Attack", throwIfNotFound: true);
             m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
+            m_Player_MoveMouse = m_Player.FindAction("MoveMouse", throwIfNotFound: true);
             m_Player_ChangeEquipment = m_Player.FindAction("ChangeEquipment", throwIfNotFound: true);
             m_Player_EquipmentSlot1 = m_Player.FindAction("EquipmentSlot1", throwIfNotFound: true);
             m_Player_EquipmentSlot2 = m_Player.FindAction("EquipmentSlot2", throwIfNotFound: true);
             m_Player_EquipmentSlot3 = m_Player.FindAction("EquipmentSlot3", throwIfNotFound: true);
             m_Player_Pause = m_Player.FindAction("Pause", throwIfNotFound: true);
             m_Player_Interact = m_Player.FindAction("Interact", throwIfNotFound: true);
-            m_Player_Movement = m_Player.FindAction("Movement", throwIfNotFound: true);
         }
 
         public void Dispose()
@@ -439,26 +439,26 @@ namespace CaptainHindsight
         private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
         private readonly InputAction m_Player_Attack;
         private readonly InputAction m_Player_Move;
+        private readonly InputAction m_Player_MoveMouse;
         private readonly InputAction m_Player_ChangeEquipment;
         private readonly InputAction m_Player_EquipmentSlot1;
         private readonly InputAction m_Player_EquipmentSlot2;
         private readonly InputAction m_Player_EquipmentSlot3;
         private readonly InputAction m_Player_Pause;
         private readonly InputAction m_Player_Interact;
-        private readonly InputAction m_Player_Movement;
         public struct PlayerActions
         {
             private @PlayerInputActions m_Wrapper;
             public PlayerActions(@PlayerInputActions wrapper) { m_Wrapper = wrapper; }
             public InputAction @Attack => m_Wrapper.m_Player_Attack;
             public InputAction @Move => m_Wrapper.m_Player_Move;
+            public InputAction @MoveMouse => m_Wrapper.m_Player_MoveMouse;
             public InputAction @ChangeEquipment => m_Wrapper.m_Player_ChangeEquipment;
             public InputAction @EquipmentSlot1 => m_Wrapper.m_Player_EquipmentSlot1;
             public InputAction @EquipmentSlot2 => m_Wrapper.m_Player_EquipmentSlot2;
             public InputAction @EquipmentSlot3 => m_Wrapper.m_Player_EquipmentSlot3;
             public InputAction @Pause => m_Wrapper.m_Player_Pause;
             public InputAction @Interact => m_Wrapper.m_Player_Interact;
-            public InputAction @Movement => m_Wrapper.m_Player_Movement;
             public InputActionMap Get() { return m_Wrapper.m_Player; }
             public void Enable() { Get().Enable(); }
             public void Disable() { Get().Disable(); }
@@ -474,6 +474,9 @@ namespace CaptainHindsight
                 @Move.started += instance.OnMove;
                 @Move.performed += instance.OnMove;
                 @Move.canceled += instance.OnMove;
+                @MoveMouse.started += instance.OnMoveMouse;
+                @MoveMouse.performed += instance.OnMoveMouse;
+                @MoveMouse.canceled += instance.OnMoveMouse;
                 @ChangeEquipment.started += instance.OnChangeEquipment;
                 @ChangeEquipment.performed += instance.OnChangeEquipment;
                 @ChangeEquipment.canceled += instance.OnChangeEquipment;
@@ -492,9 +495,6 @@ namespace CaptainHindsight
                 @Interact.started += instance.OnInteract;
                 @Interact.performed += instance.OnInteract;
                 @Interact.canceled += instance.OnInteract;
-                @Movement.started += instance.OnMovement;
-                @Movement.performed += instance.OnMovement;
-                @Movement.canceled += instance.OnMovement;
             }
 
             private void UnregisterCallbacks(IPlayerActions instance)
@@ -505,6 +505,9 @@ namespace CaptainHindsight
                 @Move.started -= instance.OnMove;
                 @Move.performed -= instance.OnMove;
                 @Move.canceled -= instance.OnMove;
+                @MoveMouse.started -= instance.OnMoveMouse;
+                @MoveMouse.performed -= instance.OnMoveMouse;
+                @MoveMouse.canceled -= instance.OnMoveMouse;
                 @ChangeEquipment.started -= instance.OnChangeEquipment;
                 @ChangeEquipment.performed -= instance.OnChangeEquipment;
                 @ChangeEquipment.canceled -= instance.OnChangeEquipment;
@@ -523,9 +526,6 @@ namespace CaptainHindsight
                 @Interact.started -= instance.OnInteract;
                 @Interact.performed -= instance.OnInteract;
                 @Interact.canceled -= instance.OnInteract;
-                @Movement.started -= instance.OnMovement;
-                @Movement.performed -= instance.OnMovement;
-                @Movement.canceled -= instance.OnMovement;
             }
 
             public void RemoveCallbacks(IPlayerActions instance)
@@ -565,13 +565,13 @@ namespace CaptainHindsight
         {
             void OnAttack(InputAction.CallbackContext context);
             void OnMove(InputAction.CallbackContext context);
+            void OnMoveMouse(InputAction.CallbackContext context);
             void OnChangeEquipment(InputAction.CallbackContext context);
             void OnEquipmentSlot1(InputAction.CallbackContext context);
             void OnEquipmentSlot2(InputAction.CallbackContext context);
             void OnEquipmentSlot3(InputAction.CallbackContext context);
             void OnPause(InputAction.CallbackContext context);
             void OnInteract(InputAction.CallbackContext context);
-            void OnMovement(InputAction.CallbackContext context);
         }
     }
 }

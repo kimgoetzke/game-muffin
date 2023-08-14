@@ -74,7 +74,7 @@ namespace CaptainHindsight.NPCs
       EventManager.Instance.OnFactionsChange += ActionFactionChange;
     }
 
-    private void OnDestroy()
+    private void OnDisable()
     {
       EventManager.Instance.OnFactionsChange -= ActionFactionChange;
     }

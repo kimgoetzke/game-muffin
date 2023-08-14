@@ -10,7 +10,6 @@ using CaptainHindsight.Other;
 using CaptainHindsight.UI;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace CaptainHindsight.Player
 {
@@ -33,6 +32,7 @@ namespace CaptainHindsight.Player
 
 
 #pragma warning disable 414
+    // ReSharper disable once UnusedMember.Local
     private int MaxHealth => maxHealthBase + maxHealthModifier;
 #pragma warning restore 414
 
@@ -51,7 +51,7 @@ namespace CaptainHindsight.Player
 
     #region Awake & Start
 
-    private void Awake()
+    protected override void Awake()
     {
       if (_instance == null)
       {
@@ -60,15 +60,25 @@ namespace CaptainHindsight.Player
       else
       {
         Destroy(gameObject);
+        return;
       }
+      
+      base.Awake();
+      EventManager.Instance.OnActiveSkillsChange += ActionActiveSkillChange;
+      EventManager.Instance.OnSceneExit += TrySavePlayerPrefs;
     }
 
     private void Start()
     {
       // Find health bar
       if (GameObject.Find("UI").GetComponentInChildren<MHealthBar>(true) == null)
+      {
         Debug.LogError("[PlayerManager] UI canvas not found.");
-      else _healthBar = GameObject.Find("UI").GetComponentInChildren<MHealthBar>(true);
+      }
+      else
+      {
+        _healthBar = GameObject.Find("UI").GetComponentInChildren<MHealthBar>(true);
+      }
 
       // Initial configuration
       TryLoadPlayerPrefs();
@@ -156,13 +166,6 @@ namespace CaptainHindsight.Player
       _activeSkills.Add(highestRelevantSkill[0]);
       maxHealthModifier = (int)highestRelevantSkill[0].Value;
       _healthBar.SetMaxHealth(maxHealthBase + maxHealthModifier);
-    }
-
-    protected override void OnEnable()
-    {
-      base.OnEnable();
-      EventManager.Instance.OnActiveSkillsChange += ActionActiveSkillChange;
-      EventManager.Instance.OnSceneExit += TrySavePlayerPrefs;
     }
 
     protected override void OnDestroy()
