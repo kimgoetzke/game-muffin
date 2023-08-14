@@ -33,9 +33,9 @@ _This repo only contains the C# scripts and no other files or assets related to 
 + The active quest, it's task and their states are shown on the in-game UI to the player
 + Quest states and dialogue variables (which include story progression) are, by default, saved on scene change
 
-![Quest system](Assets\Settings\Readme\Quest_system.png)
+![Quest_system](https://github.com/kimgoetzke/game-muffin/assets/120580433/4d6e4b67-16f3-4e58-84d7-1e1de98b4b09)
 
-![Flying through space](Assets\Settings\Readme\Flying_through_space.gif)
+![Flying_through_space](https://github.com/kimgoetzke/game-muffin/assets/120580433/c12b7970-0fe9-4973-9108-f7d7fb3b4167)
 
 #### NPC state machine
 
