@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace CaptainHindsight.UI
 {
-  public class MQuestTrackerTask : MonoBehaviour
+  public class QuestTrackerTask : MonoBehaviour
   {
     [Title("General")] [SerializeField] [Required]
     private Image indicator;

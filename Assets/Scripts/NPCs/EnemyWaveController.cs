@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CaptainHindsight.Core;
-using CaptainHindsight.Directors;
 using CaptainHindsight.Managers;
 using CaptainHindsight.UI;
 using Sirenix.OdinInspector;
@@ -23,6 +22,7 @@ namespace CaptainHindsight.NPCs
     [ShowInInspector] [ReadOnly] private int _totalWaves;
     [ShowInInspector] [ReadOnly] private int _currentWave;
     [ShowInInspector] [ReadOnly] private bool _bannerTriggerLinked;
+    private ObjectPoolManager _objectPoolManager;
 
     [ShowInInspector] [ReadOnly] [ShowIf("_bannerTriggerLinked")]
     private AreaZoneTrigger _bannerBarTrigger;
@@ -54,6 +54,7 @@ namespace CaptainHindsight.NPCs
 
     private void Awake()
     {
+      _objectPoolManager = ObjectPoolManager.Instance;
       _id = "EVENT-" + GetInstanceID();
       TryGetMBannerBarTriggerComponent();
       _totalWaves = waves.Count - 1;
@@ -157,34 +158,41 @@ namespace CaptainHindsight.NPCs
     {
       var nextEnemy = UnityEngine.Random.Range(1, waves[_currentWave].SumOfWeights + 1);
 
-      for (var j = 0; j < waves[_currentWave].enemies.Count; j++)
-        if (waves[_currentWave].enemies[j].CheckRange(nextEnemy))
+      for (var i = 0; i < waves[_currentWave].enemies.Count; i++)
+      {
+        if (waves[_currentWave].enemies[i].CheckRange(nextEnemy) == false) continue;
+
+        // Select spawnPoint, calculate offset and spawn enemy
+        var proposedSpawnPoint = _player.transform.position;
+        while ((proposedSpawnPoint - _player.transform.position).magnitude < 12f)
         {
-          // Select spawnPoint, calculate offset and spawn enemy
-          var proposedSpawnPoint = _player.transform.position;
-          while ((proposedSpawnPoint - _player.transform.position).magnitude < 12f)
-          {
-            var nextSpawnPoint = UnityEngine.Random.Range(0, spawnPoints.Count);
-            var offset = new Vector3(UnityEngine.Random.Range(0f, 2f), 0,
-              UnityEngine.Random.Range(0f, 2f));
-            proposedSpawnPoint = spawnPoints[nextSpawnPoint].position + offset;
-          }
-
-          // For debugging:
-          // Helper.Log("[EnemyWaveController] Spawning enemy (distance to player: " + (proposedSpawnPoint - player.transform.position).magnitude + ").");
-          var enemy = Instantiate(waves[_currentWave].enemies[j].prefab, proposedSpawnPoint,
-            Quaternion.identity, null);
-
-          // Set enemy's cooperation target to the player
-          var mRemoteSetup = enemy.AddComponent<MRemoteSetup>();
-          mRemoteSetup.SetCooperationTarget(_player);
-
-          // Attach component that allows receiving wave event data via EventManager
-          var mEventDefeatable = enemy.GetComponentInChildren<HealthManager>()
-            .gameObject.AddComponent<MEventDefeatable>();
-          mEventDefeatable.SetEventIdentifier(_id);
-          mEventDefeatable.SetNpcIdentifier(waves[_currentWave].enemies[j].identifier);
+          var nextSpawnPoint = UnityEngine.Random.Range(0, spawnPoints.Count);
+          var offset = new Vector3(UnityEngine.Random.Range(0f, 2f), 0,
+            UnityEngine.Random.Range(0f, 2f));
+          proposedSpawnPoint = spawnPoints[nextSpawnPoint].position + offset;
         }
+
+        // For debugging:
+        // Helper.Log("[EnemyWaveController] Spawning enemy (distance to player: " + (proposedSpawnPoint - player.transform.position).magnitude + ").");
+        
+        // TODO: Switch to using object pool for spawning enemies
+        // var enemy = _objectPoolManager.SpawnFromPool(
+        //   "npc-" + waves[_currentWave].enemies[i].prefab.name,
+        //   proposedSpawnPoint, Quaternion.identity);
+
+        var enemy = Instantiate(waves[_currentWave].enemies[i].prefab, proposedSpawnPoint,
+          Quaternion.identity, null);
+
+        // Set enemy's cooperation target to the player
+        var mRemoteSetup = enemy.GetComponent<MRemoteSetup>();
+        mRemoteSetup.SetCooperationTarget(_player);
+
+        // Attach component that allows receiving wave event data via EventManager
+        var mEventDefeatable = enemy.GetComponentInChildren<HealthManager>()
+          .gameObject.AddComponent<MEventDefeatable>();
+        mEventDefeatable.SetEventIdentifier(_id);
+        mEventDefeatable.SetNpcIdentifier(waves[_currentWave].enemies[i].identifier);
+      }
 
       _enemiesCurrentlyActive++;
       _enemiesSpawned++;
@@ -236,6 +244,7 @@ namespace CaptainHindsight.NPCs
         elapsedTime += Time.deltaTime;
         await Task.Yield();
       }
+
       _eventInterval = false;
     }
 
@@ -374,9 +383,9 @@ namespace CaptainHindsight.NPCs
 
       [Range(1, 100)] public int weight = 1;
 
-      [ShowInInspector] [ReadOnly] private int _x;
+      [ShowInInspector, ReadOnly] private int _x;
 
-      [ShowInInspector] [ReadOnly] private int _y;
+      [ShowInInspector, ReadOnly] private int _y;
 
       public void SetRange(int x, int y)
       {
@@ -386,8 +395,7 @@ namespace CaptainHindsight.NPCs
 
       public bool CheckRange(int number)
       {
-        if (number >= _x && number <= _y) return true;
-        return false;
+        return number >= _x && number <= _y;
       }
     }
 

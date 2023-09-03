@@ -16,7 +16,9 @@ namespace CaptainHindsight.UI
 
     public void ContinueGame()
     {
-      TransitionManager.Instance.FadeToNextScene(GlobalConstants.PREVIOUS_SCENE);
+      var sceneName = PlayerPrefsManager.Instance.LoadString(GlobalConstants.ACTIVE_SCENE);
+      Helper.Log("[MainMenu] Loading scene: " + sceneName + ".");
+      TransitionManager.Instance.FadeToNextScene(sceneName);
     }
 
     public void NewGame()

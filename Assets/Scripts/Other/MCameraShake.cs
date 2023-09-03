@@ -28,11 +28,9 @@ namespace CaptainHindsight.Other
 
     public void ShakeCamera(float intensity, float time)
     {
-      // Grab the noise profile we configured on the cinemachine camera
       var cinemachineBasicMultiChannelPerlin =
         _cinemachineCamera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
-
-      // Set variables for time and intensity
+        
       cinemachineBasicMultiChannelPerlin.m_AmplitudeGain = intensity;
       _startingIntensity = intensity;
       _shakeTimerTotal = time;

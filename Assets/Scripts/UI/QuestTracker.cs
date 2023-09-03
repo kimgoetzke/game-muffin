@@ -7,14 +7,14 @@ using static CaptainHindsight.Quests.Quest;
 
 namespace CaptainHindsight.UI
 {
-  public class MQuestTracker : QuestStateBehaviour
+  public class QuestTracker : QuestStateBehaviour
   {
     [Title("Configuration")] [SerializeField] [Required]
     private TextMeshProUGUI titleMesh;
 
     [SerializeField] [Required] private GameObject taskTemplatePrefab;
     [SerializeField] [Required] private GameObject questHolder;
-    [ShowInInspector] [ReadOnly] private List<MQuestTrackerTask> _mQuestTrackerTasks = new();
+    [ShowInInspector] [ReadOnly] private List<QuestTrackerTask> _mQuestTrackerTasks = new();
 
     protected override void ActionQuestUpdate(Quest quest, bool onlyStateChange)
     {
@@ -61,7 +61,7 @@ namespace CaptainHindsight.UI
       foreach (var t in quest.tasks)
       {
         var taskHolder = Instantiate(taskTemplatePrefab, questHolder.transform, false);
-        var task = taskHolder.GetComponent<MQuestTrackerTask>();
+        var task = taskHolder.GetComponent<QuestTrackerTask>();
         task.InitialiseTask(t.questTaskData.name, t.State);
         _mQuestTrackerTasks.Add(task);
       }

@@ -5,45 +5,72 @@ using CaptainHindsight.Directors;
 using CaptainHindsight.Directors.Audio;
 using CaptainHindsight.Managers;
 using DG.Tweening;
+using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Task = System.Threading.Tasks.Task;
 
 namespace CaptainHindsight.Other
 {
   public class IntroductionSceneController : MonoBehaviour
   {
-    [SerializeField] private Transform holder;
-    [SerializeField] private int textScrollDuration = 35;
-    [SerializeField] private Transform spaceship;
-    [SerializeField] private int flyDuration = 17;
-    [SerializeField] private AudioOneShot audioOneShot;
-    [SerializeField] private TextMeshProUGUI[] paragraphs;
-    [SerializeField] private bool isChangingScene = true;
-    [SerializeField] private string sceneName;
-    private CancellationTokenSource _tokenSource1;
-    private CancellationTokenSource _tokenSource2;
+    [SerializeField, Required] private Transform holder;
+    [SerializeField, Required] private GameObject instructions;
+    [SerializeField, Required] private TextMeshProUGUI textMesh;
+    [SerializeField, Required] private Transform scrollDestination;
+    [SerializeField] private int textScrollDuration = 40;
+    [SerializeField, Required] private Transform spaceship;
+    [SerializeField] private int flyDuration = 15;
+    [SerializeField, Required] private AudioOneShot audioOneShot;
+    [SerializeField, Required] private TextMeshProUGUI[] paragraphs;
+    [SerializeField, Required] private string sceneName;
+    private PlayerInputActions _playerInputActions;
+    private CancellationTokenSource _tokenSource;
+    private bool _canSkipNow;
 
     private async void Awake()
     {
+      instructions.gameObject.SetActive(false);
+      _playerInputActions = new PlayerInputActions();
+      _playerInputActions.Menu.Enable();
+      _playerInputActions.Menu.Continue.performed += Continue;
+
       DOTween.SetTweensCapacity(1250, 50);
       foreach (var paragraph in paragraphs)
       {
         paragraph.DOFade(0, 0);
       }
 
-      holder.DOMoveY(-300, 0);
-      holder.DOMoveY(900, textScrollDuration);
+      holder.DOMove(scrollDestination.position, textScrollDuration);
       spaceship.DOMove(new Vector3(0, 2.1f, -0.3f), flyDuration);
-      _tokenSource1 = new CancellationTokenSource();
-      FadeToNextScene();
+      _tokenSource = new CancellationTokenSource();
       foreach (var paragraph in paragraphs)
       {
         var sequence = AnimateParagraph(paragraph);
-        _tokenSource2 = new CancellationTokenSource();
         await PlayAudio(sequence);
         await WaitOneSecond();
       }
+
+      textMesh.text = "- Press any key to continue -";
+      instructions.gameObject.SetActive(true);
+      _canSkipNow = true;
+    }
+
+    private void Continue(InputAction.CallbackContext context)
+    {
+      if (_canSkipNow == false)
+      {
+        textMesh.text = "- Press any key to skip -";
+        instructions.gameObject.SetActive(true);
+        _canSkipNow = true;
+        return;
+      }
+
+      spaceship.DOKill();
+      _tokenSource?.Cancel();
+      _tokenSource = new CancellationTokenSource();
+      FadeToNextScene();
     }
 
     private static Sequence AnimateParagraph(TextMeshProUGUI paragraph)
@@ -62,7 +89,7 @@ namespace CaptainHindsight.Other
 
         return sequence;
       }
-      catch (Exception e)
+      catch (Exception)
       {
         Helper.Log("[IntroductionScene] Cancelled.");
         return null;
@@ -73,7 +100,7 @@ namespace CaptainHindsight.Other
     {
       try
       {
-        await Task.Delay(TimeSpan.FromSeconds(1f), _tokenSource2.Token);
+        await Task.Delay(TimeSpan.FromSeconds(1f), _tokenSource.Token);
       }
       catch (Exception)
       {
@@ -85,14 +112,14 @@ namespace CaptainHindsight.Other
     {
       try
       {
-        await Task.Delay(TimeSpan.FromSeconds(flyDuration - 0.5f), _tokenSource1.Token);
-        if (isChangingScene == false) return;
-        
+        _playerInputActions.Menu.Continue.performed -= Continue;
+        instructions.gameObject.SetActive(false);
         audioOneShot.Play();
-        await Task.Delay(TimeSpan.FromSeconds(0.5f), _tokenSource1.Token);
+        await Task.Delay(TimeSpan.FromSeconds(0.5f), _tokenSource.Token);
         spaceship.DOScale(new Vector3(0, 0, 0), 2);
         spaceship.DOMove(new Vector3(0, -20f, -0.2f), 2);
-        await Task.Delay(TimeSpan.FromSeconds(2f), _tokenSource1.Token);
+        AudioDirector.Instance.Play("Boom");
+        await Task.Delay(TimeSpan.FromSeconds(2f), _tokenSource.Token);
         TransitionManager.Instance.FadeToNextScene(sceneName);
       }
       catch (Exception)
@@ -108,7 +135,7 @@ namespace CaptainHindsight.Other
         while (sequence.IsPlaying())
         {
           AudioDirector.Instance.Play("Type");
-          await Task.Delay(TimeSpan.FromSeconds(0.03f), _tokenSource2.Token);
+          await Task.Delay(TimeSpan.FromSeconds(0.03f), _tokenSource.Token);
         }
       }
       catch (Exception)
@@ -119,8 +146,9 @@ namespace CaptainHindsight.Other
 
     private void OnDestroy()
     {
-      _tokenSource1?.Cancel();
-      _tokenSource2?.Cancel();
+      _tokenSource?.Cancel();
+      _playerInputActions.Menu.Continue.performed -= Continue;
+      _playerInputActions.Menu.Disable();
     }
   }
 }

@@ -101,6 +101,7 @@ namespace CaptainHindsight.Player
 
       // Play damage sound
       damageSound.Play();
+      EventManager.Instance.PlayerTakesDamage(damage, newHealth);
 
       // Update health bar
       _healthBar.SetHealth(Mathf.Clamp(newHealth, 0, maxHealthBase + maxHealthModifier));

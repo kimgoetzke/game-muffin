@@ -9,11 +9,10 @@ using DG.Tweening;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace CaptainHindsight.UI
 {
-  // Note that this clase implements BaseSubMenu which features the following methods:
+  // This class implements BaseSubMenu which features the following methods:
   // - OpenMenu (abstract)
   // - BackToPreviousMenu (virtual)
   // - MoveButtonsOutOfView & MoveButtonsIntoView
@@ -21,20 +20,18 @@ namespace CaptainHindsight.UI
   // - OnEnable (which disables the raycaster)
   public class SkillsMenu : BaseSubMenu
   {
-    [Title("General configuration")] [Required] [SerializeField]
+    [Title("General configuration")] [SerializeField, Required]
     public GameObject skillMenuUI;
 
-    [Required] [SerializeField] private Image backgroundImage;
-    [Required] [SerializeField] private GameObject backButton;
-    [Required] [SerializeField] private GameObject skillTreeHolder;
-    [Required] [SerializeField] private GameObject gridElementPrefab;
-    [ShowInInspector] [ReadOnly] private IMenuNestable _parentMenu;
+    [SerializeField, Required] private GameObject skillTreeHolder;
+    [SerializeField, Required] private GameObject gridElementPrefab;
+    [ShowInInspector, ReadOnly] private IMenuNestable _parentMenu;
     private PlayerSkillsManager _playerSkillsManager;
 
-    [Title("Skills settings")] [Required] [SerializeField]
+    [Title("Skills settings")] [SerializeField, Required]
     private TextMeshProUGUI pointsMesh;
 
-    [SerializeField] [ListDrawerSettings(ShowFoldout = true)] [ShowInInspector] [ReadOnly]
+    [SerializeField] [ListDrawerSettings(ShowFoldout = true)] [ShowInInspector, ReadOnly]
     private List<Skill> allSkills = new();
 
     [ShowInInspector] [ReadOnly] private List<GameObject> _skillGridElements = new();
@@ -107,12 +104,7 @@ namespace CaptainHindsight.UI
 
     #region Managing audio (Back button)
 
-    public static void PlayButtonHighlightSound()
-    {
-      AudioDirector.Instance.Play("Select");
-    }
-
-    public static void PlayButtonPressSound()
+    private static void PlayButtonPressSound()
     {
       AudioDirector.Instance.Play("Click");
     }
@@ -124,7 +116,7 @@ namespace CaptainHindsight.UI
     private void ActionSkillPointChange(int change)
     {
       var currentSkillPoints = _playerSkillsManager.GetCurrentSkillPoints();
-      Helper.Log("[SkillMenu] Updating skill points to: " + currentSkillPoints.ToString() + ".");
+      Helper.Log("[SkillMenu] Updating skill points to: " + currentSkillPoints + ".");
       pointsMesh.text = currentSkillPoints.ToString();
     }
 

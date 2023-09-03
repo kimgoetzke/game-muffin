@@ -17,35 +17,39 @@ namespace CaptainHindsight.UI
     [Title("General configuration")] [SerializeField] [Required]
     public GameObject pauseMenuUI;
 
-    [SerializeField] [Required] private GraphicRaycaster raycaster;
+    [SerializeField, Required] private GraphicRaycaster raycaster;
 
-    [ShowInInspector] [ReadOnly] private bool _allowButtonPress = true;
+    [ShowInInspector, ReadOnly] private bool _allowButtonPress = true;
 
     [SerializeField] [ListDrawerSettings(ShowFoldout = true)] [ChildGameObjectsOnly]
     private RectTransform[] buttons;
 
     private bool _gameIsPaused;
 
-    [Title("Game Over menu")] [SerializeField] [Required]
+    [Title("Game Over menu")] [SerializeField, Required]
     private TextMeshProUGUI titleMesh;
 
-    [SerializeField] [Required] private TextMeshProUGUI subTitleMesh;
-    [SerializeField] [Required] private GameObject resumeButton;
-    [SerializeField] [Required] private GameObject tryAgainButton;
+    [SerializeField, Required] private TextMeshProUGUI subTitleMesh;
+    [SerializeField, Required] private GameObject resumeButton;
+    [SerializeField, Required] private GameObject tryAgainButton;
 
-    [Title("Other menus")] [SerializeField] [Required]
+    [Title("Other menus")] [SerializeField, Required]
     private GameObject skillButton;
 
-    [SerializeField] [Required] public BaseSubMenu skillMenu;
+    [SerializeField, Required] public BaseSubMenu skillMenu;
+
+    [SerializeField, Required] private GameObject optionsButton;
+
+    [SerializeField] [Required] public BaseSubMenu optionsMenu;
 
     protected override void Awake()
     {
       base.Awake();
       EventManager.Instance.OnPauseMenuRequest += AttemptToPauseOrUnpause;
-        
+
       subTitleMesh.gameObject.SetActive(false);
       tryAgainButton.SetActive(false);
-      
+
       // Without this the pause menu will block interactions with other menus
       // (such as an end of level menu) and possibly a touch controller
       raycaster.enabled = false;
@@ -137,6 +141,18 @@ namespace CaptainHindsight.UI
 
     public async void SkillMenu()
     {
+      await PrepareToOpenSubMenu();
+      skillMenu.OpenMenu(this);
+    }
+    
+    public async void OptionsMenu()
+    {
+      await PrepareToOpenSubMenu();
+      optionsMenu.OpenMenu(this);
+    }
+
+    private async Task PrepareToOpenSubMenu()
+    {
       // Ensure that the below, esp. animations, cannot be interrupted/messed
       // up by going out of the pause menu - IMPORTANT:
       // The pause menu remains locked until the user is back from the sub-menu.
@@ -159,7 +175,6 @@ namespace CaptainHindsight.UI
 
       // Swap active menu screens
       pauseMenuUI.SetActive(false);
-      skillMenu.OpenMenu(this);
     }
 
     public void RestartLevel()
@@ -178,10 +193,11 @@ namespace CaptainHindsight.UI
 
     public void PlayButtonHighlightSound()
     {
+      Helper.LogError("Played highlight button!");
       AudioDirector.Instance.Play("Select");
     }
-
-    public void PlayButtonPressSound()
+    
+    private void PlayButtonPressSound()
     {
       AudioDirector.Instance.Play("Click");
     }
@@ -212,7 +228,7 @@ namespace CaptainHindsight.UI
         {
           sequence
             .Append(button.DOAnchorPosY(-60, 0.2f)
-            .SetEase(Ease.Linear));
+              .SetEase(Ease.Linear));
         }
       }
     }
@@ -256,11 +272,11 @@ namespace CaptainHindsight.UI
     protected override void ActionGameStateChange(GameState state, GameStateSettings settings,
       string message)
     {
-      Helper.Log($"[PauseMenu] GameState changed to {state} with " +
+      Helper.Log($"[PauseMenu] State changed to '{state}' with " +
                  (message == "" ? "no message" : "'" + message + "'") + ".");
       if (state == GameState.GameOver)
         SwitchToAndTriggerGameOverMenu(message);
-      else if (state == GameState.Tutorial || state == GameState.Transition)
+      else if (state == GameState.Transition)
         LockPauseMenu(true);
       else if (state == GameState.Play) LockPauseMenu(false);
     }

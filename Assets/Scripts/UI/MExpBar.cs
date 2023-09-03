@@ -10,8 +10,7 @@ namespace CaptainHindsight.UI
   public class MExpBar : MonoBehaviour
   {
     [SerializeField] private Slider slider;
-    [SerializeField] private Image image;
-    [ShowInInspector] private int _currentExperience = 0;
+    [ShowInInspector] private int _currentExperience;
     [ShowInInspector] private int _maxExperience = 10;
     [SerializeField] private TextMeshProUGUI textMesh;
     private int _currentLevel = 1;
@@ -31,7 +30,7 @@ namespace CaptainHindsight.UI
       textMesh.text = "LEVEL " + _currentLevel;
     }
 
-    public void SetExperience(int experience, int maxExperience)
+    private void SetExperience(int experience, int maxExperience)
     {
       // For debugging:
       Helper.Log($"[MExpBar] Now at " + experience + " out of " + maxExperience + " experience.");
@@ -41,13 +40,12 @@ namespace CaptainHindsight.UI
 
     private void SetLevel(int change)
     {
-      if (change > 0)
-      {
-        // For debugging:
-        Helper.Log($"[MExpBar] Added " + change + " level.");
-        _currentLevel += change;
-        textMesh.text = "LEVEL " + _currentLevel;
-      }
+      if (change <= 0) return;
+      
+      // For debugging:
+      Helper.Log($"[MExpBar] Added " + change + " level.");
+      _currentLevel += change;
+      textMesh.text = "LEVEL " + _currentLevel;
     }
 
     private void OnDestroy()

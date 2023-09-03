@@ -53,7 +53,6 @@ namespace CaptainHindsight.Managers
       await Task.Delay(System.TimeSpan.FromSeconds(lengthOfFadeIn));
 
       // Switch to Play state
-      // NOTE: I'll have to do some work here to when implementing Menu/Tutorial state
       GameStateDirector.Instance.SwitchState(GameState.Play);
     }
 
@@ -62,7 +61,7 @@ namespace CaptainHindsight.Managers
       blackImage
         .DOFade(1f, lengthOfFadeOut)
         .SetUpdate(UpdateType.Normal, true);
-
+      
       GameStateDirector.Instance.SwitchState(GameState.Transition);
       await Task.Delay(System.TimeSpan.FromSeconds(lengthOfFadeOut + 1f));
       

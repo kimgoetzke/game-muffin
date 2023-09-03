@@ -37,7 +37,7 @@ namespace CaptainHindsight.Directors
     [ShowInInspector] [ReadOnly] [ListDrawerSettings(ShowFoldout = false)]
     private AudioSource[] _backgroundMusic;
 
-    private bool _isPlayingBackgroundMusic;
+    [ShowInInspector, ReadOnly] private bool _isPlayingBackgroundMusic;
 
     #endregion
 
@@ -81,6 +81,12 @@ namespace CaptainHindsight.Directors
       SetAndStartBackgroundMusic();
     }
 
+    // Load audio mixer settings (must be loaded at Start or later - known Unity problem)
+    private void Start()
+    {
+      TryLoadPlayerPrefs();
+    }
+
     private void SetAndStartBackgroundMusic()
     {
       // Get all audio sources from the background music object & play random track
@@ -92,7 +98,7 @@ namespace CaptainHindsight.Directors
       for (var i = 0; i < _backgroundMusic.Length; i++)
         _startVolume[i] = _backgroundMusic[i].volume;
     }
-    
+
     public void PlayBackgroundMusic()
     {
       if (_isPlayingBackgroundMusic) return;
@@ -112,7 +118,8 @@ namespace CaptainHindsight.Directors
         if (audioSource.isPlaying) audioSource.Stop();
       }
     }
-    
+
+    // TODO: Consider replacing this Update() loop by a coroutine/tasks or events
     private void Update()
     {
       _countdownBackgroundMusic += Time.deltaTime;
@@ -121,10 +128,6 @@ namespace CaptainHindsight.Directors
       if (_isPlayingBackgroundMusic == false) return;
       PlayBackgroundMusic();
     }
-
-    // Load audio mixer settings (must loaded at start or later - known Unity problem)
-    // TODO: Uncomment once having created an options menu
-    // private void Start() => TryLoadPlayerPrefs();
 
     #endregion
 
@@ -174,7 +177,7 @@ namespace CaptainHindsight.Directors
       // Then play it like this:
       // audioSource.Play();
       // This will add a new AudioSource for the SFX to the GameObject provided.
-      
+
       var audioSource = AddAudioSource(obj, sfx);
       if (isStatic)
       {
@@ -186,7 +189,8 @@ namespace CaptainHindsight.Directors
         audioSource.spatialBlend = 1f;
         audioSource.maxDistance = maxDistance;
       }
-      audioSource.loop = true;  
+
+      audioSource.loop = true;
       return audioSource;
     }
 
@@ -241,36 +245,55 @@ namespace CaptainHindsight.Directors
 
     #endregion
 
-    #region Managing events
+    public void SetVolume(string mixer, float volume)
+    {
+      audioMixer.SetFloat(mixer, Mathf.Log10(volume) * 30f);
+    }
 
-    // TODO: Uncomment once having created an options menu
-    // private void OnEnable() => EventManager.Instance.OnSceneExit += TrySavePlayerPrefs;
-    // private void OnDestroy() => EventManager.Instance.OnSceneExit -= TrySavePlayerPrefs;
-
-    #endregion
+    public float GetVolume(string mixer)
+    {
+      audioMixer.GetFloat(mixer, out var volume);
+      return Mathf.Pow(10, volume / 30f);
+    }
 
     #region Get player audio settings from PlayerPrefs
 
     public void TryLoadPlayerPrefs()
     {
-      var sound = PlayerPrefsManager.Instance.LoadFloat(GlobalConstants.AUDIO_SOUND_VOLUME);
-      audioMixer.SetFloat("SFX", Mathf.Log10(sound) * 30f);
-
+      Helper.Log("[AudioDirector] Loading audio settings.");
+      var sfx = PlayerPrefsManager.Instance.LoadFloat(GlobalConstants.AUDIO_SFX_VOLUME);
+      if (sfx > 0) audioMixer.SetFloat("SFX", ToLogScale(sfx));
       var music = PlayerPrefsManager.Instance.LoadFloat(GlobalConstants.AUDIO_MUSIC_VOLUME);
-      audioMixer.SetFloat("Music", Mathf.Log10(music) * 30f);
-
-      // For debugging:
-      // Helper.Log("Music value found and set to: " + value);
-      // audioMixer.GetFloat("Music", out float number);
-      // Helper.Log("Music value set to: " + number);
+      if (music > 0) audioMixer.SetFloat("Music", ToLogScale(music));
+      DebugVolumeSettings(sfx, music);
     }
 
-    public void TrySavePlayerPrefs(string spawnPointName)
+    public void TrySavePlayerPrefs(string ignored)
     {
+      Helper.Log("[AudioDirector] Saving audio settings.");
+      audioMixer.GetFloat("SFX", out var sfx);
+      sfx = ToLinearScale(sfx);
+      PlayerPrefsManager.Instance.Save(GlobalConstants.AUDIO_SFX_VOLUME, sfx);
       audioMixer.GetFloat("Music", out var music);
+      music = ToLinearScale(music);
       PlayerPrefsManager.Instance.Save(GlobalConstants.AUDIO_MUSIC_VOLUME, music);
-      audioMixer.GetFloat("SFX", out var sound);
-      PlayerPrefsManager.Instance.Save(GlobalConstants.AUDIO_SOUND_VOLUME, sound);
+      DebugVolumeSettings(sfx, music);
+    }
+    
+    private static float ToLogScale(float value)
+    {
+      return Mathf.Log10(value) * 30f;
+    }
+    
+    private static float ToLinearScale(float value)
+    {
+      return Mathf.Pow(10, value / 30f);
+    }
+
+    private void DebugVolumeSettings(float sfx, float music)
+    {
+      // For debugging:
+      Helper.Log($"[AudioDirector] Current volume settings - SFX: {sfx}. Music: {music}.");
     }
 
     #endregion

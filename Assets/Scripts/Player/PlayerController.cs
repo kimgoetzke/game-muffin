@@ -479,6 +479,11 @@ namespace CaptainHindsight.Player
     {
       UpdateSkeleton(1);
     }
+    
+    public void ForceSetSkeletonS()
+    {
+      UpdateSkeleton(2);
+    }
 
     public void ForceSetSkeletonE()
     {
@@ -510,6 +515,19 @@ namespace CaptainHindsight.Player
     private void SubscribeToEvents()
     {
       _playerInputActions = new PlayerInputActions();
+      EventManager.Instance.OnDialogueStateChange += ActionDialogueStateChange;
+      EventManager.Instance.OnActiveSkillsChange += ActionActiveSkillsChange;
+    }
+
+    protected override void OnDestroy()
+    {
+      base.OnDestroy();
+      EventManager.Instance.OnDialogueStateChange -= ActionDialogueStateChange;
+      EventManager.Instance.OnActiveSkillsChange -= ActionActiveSkillsChange;
+    }
+
+    private void OnEnable()
+    {
       _playerInputActions.Player.Enable();
       _playerInputActions.Player.Attack.started += _ => _isAttacking = true;
       _playerInputActions.Player.Attack.canceled += _ => _isAttacking = false;
@@ -527,20 +545,15 @@ namespace CaptainHindsight.Player
       _playerInputActions.Player.ChangeEquipment.performed += ChangeEquipment;
       _playerInputActions.Player.Pause.performed += Pause;
       _moveInput = _playerInputActions.Player.Move;
-      EventManager.Instance.OnDialogueStateChange += ActionDialogueStateChange;
-      EventManager.Instance.OnActiveSkillsChange += ActionActiveSkillsChange;
     }
 
-    protected override void OnDestroy()
+    private void OnDisable()
     {
-      base.OnDestroy();
       _moveInput.Disable();
       _playerInputActions.Player.Interact.performed -= Interact;
       _playerInputActions.Player.Pause.performed -= Pause;
       _playerInputActions.Player.ChangeEquipment.performed -= ChangeEquipment;
       _playerInputActions.Player.Disable();
-      EventManager.Instance.OnDialogueStateChange -= ActionDialogueStateChange;
-      EventManager.Instance.OnActiveSkillsChange -= ActionActiveSkillsChange;
     }
 
     #endregion

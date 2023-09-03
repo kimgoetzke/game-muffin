@@ -17,7 +17,7 @@ namespace CaptainHindsight.Core
 
   public enum GameState
   {
-    Tutorial,
+    Timeline,
     Play,
     Pause,
     GameOver,

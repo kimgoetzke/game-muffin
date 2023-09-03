@@ -10,6 +10,12 @@ namespace CaptainHindsight.UI
   {
     [SerializeField] private Image image;
     [SerializeField] private Sprite defaultImage, pressedImage, confirmedImage;
+    private Button _button;
+    
+    private void Awake()
+    {
+      _button = GetComponent<Button>();
+    }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
@@ -26,7 +32,7 @@ namespace CaptainHindsight.UI
     public void OnPointerClick(PointerEventData eventData)
     {
       image.sprite = confirmedImage;
-      AudioDirector.Instance.Play("Click");
+      AudioDirector.Instance.Play(_button.interactable == false ? "Cancel" : "Click");
     }
 
     public void OnPointerUp(PointerEventData eventData)

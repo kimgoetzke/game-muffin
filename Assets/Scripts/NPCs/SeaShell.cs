@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -5,6 +6,7 @@ using CaptainHindsight.Directors;
 using CaptainHindsight.Directors.Audio;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace CaptainHindsight.NPCs
 {
@@ -85,7 +87,7 @@ namespace CaptainHindsight.NPCs
 
         _isOpen = true;
       }
-      catch (TaskCanceledException)
+      catch (Exception)
       {
         // Deliberately ignored
       }

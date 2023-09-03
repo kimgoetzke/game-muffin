@@ -44,7 +44,7 @@ namespace CaptainHindsight.Managers
       });
       Helper.Log("[PlayerPrefsManager] End of PlayerPrefs.");
     }
-    
+
     [HorizontalGroup("Editor actions/Split")]
     [VerticalGroup("Editor actions/Split/Left")]
     [Button("Delete spawn point", ButtonSizes.Large), PropertySpace(SpaceBefore = 5)]
@@ -80,7 +80,7 @@ namespace CaptainHindsight.Managers
     {
       if (GameObject.Find("Player") == null)
       {
-        Debug.LogError("[PlayerPrefsManager] Player transform not found.");
+        Debug.LogWarning("[PlayerPrefsManager] Player transform not found.");
       }
       else
       {
@@ -110,6 +110,11 @@ namespace CaptainHindsight.Managers
     #endregion
 
     #region Managing loading
+
+    public bool HasSpawnPoint()
+    {
+      return PlayerPrefs.HasKey(GlobalConstants.PREVIOUS_SCENE_EXIT_SPAWN);
+    }
 
     private void LoadSpawnPoint()
     {

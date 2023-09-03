@@ -21,11 +21,11 @@ VAR unusedLocalString = "Unused"
 }
 
 === hello ===
-You look like you can help me. My name is Caley and I need your help. I need to get out of here. But there are these ...beasts in the swamp.  #Caley
+You! How did you get here with THEM being out there?! Well, I guess this means you can help me. My name is Caley. I work for the Guild. Please help me get back to my team! I'm hiding here. These little ...beasts are out there. Our sensors didn't pick them up. #Caley
 -> theAsk
 
 === changeYourMind ===
-You've come back! Please, can you clear out the swamp and check the pass to the forest. I can help you repair your ship. #Caley
+You've come back! Please, can you clear out these monsters and check the pass to the forest. I can help you repair your ship. #Caley
 
 + [Alright, then - I'll do it.]
     -> accepted
@@ -34,9 +34,9 @@ You've come back! Please, can you clear out the swamp and check the pass to the 
 
 === theAsk ===
 ~ knowsCaley = true
-Maybe they are everywhere by now! So I'm hiding here. You look like you know how to solve problems like this. Can you help me?" #Caley
+Maybe they are everywhere by now. So I'm hiding here. I lost my equipment. You look like you know how to solve problems like this. Can you help me? You need to clear out these THINGS west of here and then to north west through that narrow pass, find Kalle and Saanvi, and bring them here." #Caley
 
-+ [Sure but I need your help too.]
++ [(Agree and explain your problem)]
     -> accepted
 + [Maybe another time.] 
     -> decline_ending
@@ -44,7 +44,7 @@ Maybe they are everywhere by now! So I'm hiding here. You look like you know how
 
 === accepted ===
 ~ QS_Fukuiraptors_accepted = true
-Sure, sure. I'll do whatever you want me to help you with. Just help me get out of here! #Caley
+Sure, sure, sure. I can take you on my ship. We came down at the edge of the desert. Once you've found my team, well take you there. Don't think about trying this alone. Without our equipment you'll get lost. This place is like a maze.  We were just collecting data when we were attacked. #Caley
 
 + [I'll get going then.]
     -> ending
@@ -57,12 +57,12 @@ You alright? #Caley
     -> ending
 
 === decline_ending
-But why? Alright then, come back if you change your mind, will you?" #Caley
+But why? Please! Well, come back if you change your mind, will you? I don't know what to do." #Caley
 -> DONE
 
 === completeQuest ===
 ~ QS_Fukuiraptors_completed = true
-Oh, sorted out the swamp? You're alive too? This is fantastic. I didn't think you make it. Thank you so much! #Caley
+Oh, you did it? And you're alive too? This is fantastic. Wasn't sure you'd make it. The pass is blocked you say? I have explored this cave. Hang on. Come back in a minute. I think I found something that can help you. #Caley
     -> ending
 
 === ending

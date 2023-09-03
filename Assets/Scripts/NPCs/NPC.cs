@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using CaptainHindsight.Core;
 using CaptainHindsight.Core.StateMachine;
@@ -516,6 +517,7 @@ namespace CaptainHindsight.NPCs
       animationController.SetTrigger("isDying");
       navMeshAgent.enabled = false;
       enabled = false;
+      Destroy(this, 15f);
     }
 
     #endregion

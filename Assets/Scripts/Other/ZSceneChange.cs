@@ -8,9 +8,9 @@ namespace CaptainHindsight.Other
   public class ZSceneChange : MonoBehaviour
   {
     [SerializeField] private Transform spawnPoint;
-    [ShowInInspector] [ReadOnly] private string _spawnPointName;
-    [SerializeField] [Required] private GameObject enterTimeline;
-    [SerializeField] [Required] private GameObject exitTimeline;
+    [ShowInInspector, ReadOnly] private string _spawnPointName;
+    [SerializeField, Required] private GameObject enterTimeline;
+    [SerializeField, Required] private GameObject exitTimeline;
 
     private void Awake()
     {

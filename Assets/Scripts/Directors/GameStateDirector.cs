@@ -40,12 +40,26 @@ namespace CaptainHindsight.Directors
       _previousState = currentState;
     }
 
-    public void SwitchState(Core.GameState state)
+    #region Switching state method which is called by other classes
+
+    public void SwitchState(Core.GameState state, bool overrideTransition = false)
     {
+      if (_previousState == Core.GameState.Transition)
+      {
+        if (ReadStateSettings(currentState).interruptedByTransition == false &&
+            overrideTransition == false)
+        {
+          Helper.Log(
+            $"[GameStateDirector] Cannot change state right now. State '{currentState}' interruptedByTransition is false and overrideTransition is false.");
+          return;
+        }
+
+        Helper.Log(
+          "[GameStateDirector] State change with interruptedByTransition override requested.");
+      }
+
       SwitchState(state, string.Empty);
     }
-
-    #region Switching state method which is called by other classes
 
     public void SwitchState(Core.GameState state, string message)
     {
@@ -78,7 +92,7 @@ namespace CaptainHindsight.Directors
       // Exit current game state...
       switch (currentState)
       {
-        case Core.GameState.Tutorial: break;
+        case Core.GameState.Timeline: break;
         case Core.GameState.Play: break;
         case Core.GameState.Pause: break;
         case Core.GameState.GameOver: break;
@@ -91,7 +105,7 @@ namespace CaptainHindsight.Directors
       // Enter the new game state...
       switch (state)
       {
-        case Core.GameState.Tutorial: break;
+        case Core.GameState.Timeline: break;
         case Core.GameState.Play: break;
         case Core.GameState.Pause: break;
         case Core.GameState.GameOver: break;

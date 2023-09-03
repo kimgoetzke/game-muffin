@@ -65,11 +65,18 @@ namespace CaptainHindsight.Managers
     #region Managing player & player input-related events
     
     public event Action OnPauseMenuRequest;
+    public event Action<int, int> OnPlayerTakesDamage;
 
     // Used by PlayerController when relevant input is detected (e.g. Escape key pressed)
     public void RequestPauseMenu()
     {
       OnPauseMenuRequest?.Invoke();
+    }
+    
+    // Used by ScreenMask to show a fade in/out effect receiving damage
+    public void PlayerTakesDamage(int damage, int health)
+    {
+      OnPlayerTakesDamage?.Invoke(damage, health);
     }
 
     #endregion

@@ -13,11 +13,16 @@ namespace CaptainHindsight.Core
     public const string CURRENT_HEALTH = "PlayerHealth";
     public const string CURRENT_MAX_HEALTH = "PlayerMaxHealth";
     public const string SKILL_POINTS = "PlayerSkillPoints";
-    public const string AUDIO_SOUND_VOLUME = "AudioSoundVolume";
+    public const string AUDIO_SFX_VOLUME = "AudioSfxVolume";
     public const string AUDIO_MUSIC_VOLUME = "AudioMusicVolume";
     public const string ALL_QUESTS = "QuestsAll";
     public const string DIALOGUE_VARIABLES = "QuestDialogueVariables";
 
+    public const string AUDIO_SFX_MIXER = "SFX";
+    public const string AUDIO_MUSIC_MIXER = "Music";
+
+    // Lists all constants used in PlayerPrefsManager which are associated with string values.
+    // Allows for easy iteration over all constants in the context of logging current values.
     public static void ForEachStringConstant(Action<object> value)
     {
       value(ACTIVE_SCENE);
@@ -28,6 +33,8 @@ namespace CaptainHindsight.Core
       value(DIALOGUE_VARIABLES);
     }
 
+    // Lists all constants used in PlayerPrefsManager which are associated with int values.
+    // Allows for easy iteration over all constants in the context of logging current values.
     public static void ForEachIntConstant(Action<object> value)
     {
       value(CURRENT_LEVEL);
@@ -37,9 +44,11 @@ namespace CaptainHindsight.Core
       value(SKILL_POINTS);
     }
 
+    // Lists all constants used in PlayerPrefsManager which are associated with float values.
+    // Allows for easy iteration over all constants in the context of logging current values.
     public static void ForEachFloatConstant(Action<object> value)
     {
-      value(AUDIO_SOUND_VOLUME);
+      value(AUDIO_SFX_VOLUME);
       value(AUDIO_MUSIC_VOLUME);
     }
   }
