@@ -8,7 +8,7 @@ _This repo only contains the C# scripts and no other files or assets related to 
 
 ![Muffin banner bar 02](https://github.com/kimgoetzke/game-muffin/assets/120580433/7bbfa92a-a095-4344-a9e7-681d2af619ce)
 
-### Some technical features
+## Some technical features
 + Unified, hierarchical state machine AI model that powers friends and foes alike and allows them to interact with one another
 + Faction management that allows changing NPC behaviours real-time (towards player and other NPCs)
 + (I also experimented with a behavioural tree model for AI which is in this repo but not used as it was not required)
@@ -28,9 +28,13 @@ _This repo only contains the C# scripts and no other files or assets related to 
 
 ![Muffin banner bar 01](https://github.com/kimgoetzke/game-muffin/assets/120580433/c2af44ef-45d1-47a7-b823-d19f05c470c4)
 
-### Game system examples
+## Demo
 
-#### NPC state machine
+[![YouTube - Muffin Gameplay](https://img.youtube.com/vi/MV7zcRffliU/0.jpg)](https://www.youtube.com/watch?v=MV7zcRffliU)
+
+## Game system examples
+
+### NPC state machine
 
 + `NPC` state machine is at the core
 + `NpcBehaviour` sets default behavior: anxious, neutral, indifferent, observant, defensive, or aggressive
@@ -48,7 +52,7 @@ _This repo only contains the C# scripts and no other files or assets related to 
 
 ![Flying_through_space](https://github.com/kimgoetzke/game-muffin/assets/120580433/c12b7970-0fe9-4973-9108-f7d7fb3b4167)
 
-#### Quest system
+### Quest system
 
 + A `Quest` is a collection of tasks which can be linked to a story 
 + Stories are text assets which are arranged into a flow using the third party tool Ink 
