@@ -2,7 +2,7 @@
 
 Muffin is a top-down, 3D pixel art, action RPG using 2D sprites, developed in C#/Unity. I worked on it in 2022/23 with the goal of learning about game/physics engines, and improving my skills in C#, 3D, shaders, render pipelines, traditional AI design, and many other topics. 
 
-The game is in a pre-alpha stage. It is fully playable but is not feature complete and only about 5 minutes worth of content. However, it is considered complete as this was a learning project and I have no intention of turning it into a releasable game.
+The game is in a pre-alpha stage. It is fully playable but is not feature complete and only has about 5 minutes worth of content. However, it is considered complete as this was a learning project and I have no intention of turning it into a releasable game.
 
 _This repo only contains the C# scripts and no other files or assets related to the game. Plastic SCM was used for full version control for this project as it natively integrates with Unity._
 
